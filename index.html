@@ -1,0 +1,842 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CT 디스플레이 스튜디오</title>
+<style>
+  :root {
+    --bg: #0f1013; --panel: #17191d; --panel2: #1e2126; --line: #2b2f36;
+    --text: #e8eaed; --muted: #9aa0a8; --accent: #4da3ff; --danger: #ff6b6b;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", sans-serif; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { background: var(--panel2); border: 1px solid var(--line); border-radius: 7px; padding: 6px 10px; cursor: pointer; }
+  button:hover { border-color: #3d434c; background: #252930; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #04121f; font-weight: 600; }
+  button.danger { color: var(--danger); }
+  input[type=text], input[type=number], select, textarea {
+    background: #0c0d10; border: 1px solid var(--line); border-radius: 6px; padding: 5px 7px; width: 100%; }
+  input[type=color] { width: 34px; height: 28px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: none; }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  textarea { resize: vertical; }
+  :disabled { opacity: .45; }
+
+  header { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  header h1 { font-size: 15px; margin: 0 auto 0 0; }
+  .app { display: grid; grid-template-columns: 240px minmax(0, 1fr) 320px; gap: 12px; padding: 12px 16px; align-items: start; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+  .card h2 { font-size: 12px; color: var(--muted); font-weight: 600; margin: 0 0 8px; letter-spacing: .02em; }
+  .row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .row > * { flex: 1 1 auto; }
+  .row > button, .row > input[type=color] { flex: 0 0 auto; }
+  .stack { display: grid; gap: 8px; }
+  label.f { display: grid; gap: 3px; color: var(--muted); font-size: 12px; }
+  label.f .val { color: var(--text); float: right; font-variant-numeric: tabular-nums; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .hint { color: var(--muted); font-size: 12px; }
+  .msg { color: var(--accent); font-size: 12px; min-height: 1em; }
+
+  /* 왼쪽 목록 */
+  .list { display: grid; gap: 6px; max-height: 52vh; overflow: auto; margin: 8px 0; }
+  .item { display: flex; align-items: center; gap: 8px; padding: 5px; border: 1px solid transparent; border-radius: 8px; cursor: pointer; }
+  .item:hover { background: var(--panel2); }
+  .item.on { border-color: var(--accent); background: #1a2533; }
+  .item canvas { width: 48px; height: 48px; border-radius: 6px; flex: none; background: #000; }
+  .item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+
+  /* 가운데 편집기 */
+  .center { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+  .editor-wrap { display: grid; justify-items: center; gap: 8px; }
+  #editor { width: min(100%, 420px); aspect-ratio: 1; border-radius: 6px; cursor: grab; touch-action: none;
+    background: repeating-conic-gradient(#2a2d33 0 25%, #1f2227 0 50%) 0 0 / 20px 20px; }
+  #editor:active { cursor: grabbing; }
+  .size-badge { color: var(--muted); font-size: 12px; }
+
+  /* 장비 목업: 160×150 좌표계를 %로 배치 */
+  .device { position: relative; width: 100%; max-width: 440px; margin: 0 auto; aspect-ratio: 160 / 150;
+    background: linear-gradient(160deg, #34373d, #1c1d21 70%); border-radius: 7% / 7.5%;
+    box-shadow: 0 18px 40px #000a, inset 0 1px 0 #ffffff14; }
+  .device > * { position: absolute; }
+  .knob { border-radius: 50%; background: radial-gradient(circle at 35% 30%, #63666d, #2a2c31 55%, #141518);
+    box-shadow: inset 0 0 0 1px #000, 0 2px 4px #0009; }
+  .bezel { background: #07080a; border-radius: 4%; box-shadow: inset 0 0 0 1px #000; }
+  .strip { background: #121419; border-radius: 3px; }
+  .slot { background: #000; border-radius: 8%; overflow: hidden; cursor: pointer; }
+  .slot.on { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .slot canvas, .dial-screen canvas { width: 100%; height: 100%; display: block; }
+  .rbtn { border-radius: 50%; background: #2c2f35; box-shadow: inset 0 -1px 0 #0007, 0 1px 0 #ffffff10; }
+  .sbtn { border-radius: 14%; background: #2c2f35; box-shadow: inset 0 -1px 0 #0007, 0 1px 0 #ffffff10; }
+  .dial { border-radius: 50%; background: repeating-conic-gradient(#2a2c31 0 2deg, #1c1e22 2deg 4deg);
+    box-shadow: 0 4px 10px #000a, inset 0 0 0 2px #111; }
+  .dial-screen { border-radius: 50%; overflow: hidden; background: #000; box-shadow: 0 0 0 2px #050505; }
+  .pager { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px; }
+
+  /* 오른쪽 속성 */
+  details { border-top: 1px solid var(--line); padding: 8px 0; }
+  details:first-of-type { border-top: 0; padding-top: 0; }
+  summary { cursor: pointer; font-weight: 600; margin-bottom: 8px; }
+  .chips { display: flex; gap: 4px; flex-wrap: wrap; }
+  .chips button { padding: 3px 8px; font-size: 12px; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chips button.on { border-color: var(--accent); color: var(--accent); }
+  [hidden] { display: none !important; }
+  footer { padding: 4px 16px 16px; color: var(--muted); font-size: 12px; }
+
+  @media (max-width: 1280px) { .center { grid-template-columns: 1fr; } }
+  @media (max-width: 1000px) { .app { grid-template-columns: 1fr; } .list { max-height: 240px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>CT 디스플레이 스튜디오 <span class="hint">· 300×300 PNG</span></h1>
+  <button id="dlCur" class="primary">현재 이미지 PNG</button>
+  <button id="dlSel">선택 ZIP (0)</button>
+  <button id="dlAll">전체 ZIP</button>
+</header>
+
+<main class="app">
+  <!-- 왼쪽: 디자인 목록 -->
+  <aside class="card">
+    <h2>디자인 목록</h2>
+    <div class="row">
+      <button id="addDesign">+ 새로 만들기</button>
+      <button id="dupDesign">복제</button>
+      <button id="delDesign" class="danger">삭제</button>
+    </div>
+    <div class="row" style="margin-top:6px">
+      <button id="moveUp" title="위로">↑</button>
+      <button id="moveDown" title="아래로">↓</button>
+      <button id="checkAll">전체 선택</button>
+      <button id="checkNone">해제</button>
+    </div>
+    <div id="list" class="list"></div>
+    <div class="stack">
+      <button id="batchImgBtn">이미지 여러 장 → 장당 1개 생성</button>
+      <input id="batchImg" type="file" accept="image/*" multiple hidden>
+      <label class="f">텍스트 일괄 생성 (한 줄 = 디자인 1개)
+        <textarea id="bulkText" rows="4" placeholder="녹화 시작&#10;장면 전환&#10;마이크 끄기"></textarea>
+      </label>
+      <button id="bulkGo">줄마다 디자인 만들기</button>
+      <p class="hint" style="margin:0">이미지 일괄 생성은 지금 디자인의 배경만, 텍스트 일괄 생성은 배경·텍스트 스타일을 복사합니다.</p>
+    </div>
+  </aside>
+
+  <!-- 가운데: 편집 캔버스 + 장비 미리보기 -->
+  <section class="center">
+    <div class="card editor-wrap">
+      <h2 style="justify-self:start">편집 (드래그 = 이동, 휠 = 크기)</h2>
+      <canvas id="editor" width="300" height="300"></canvas>
+      <div class="size-badge">실제 출력 300 × 300 px · 이미지/폰트 파일은 캔버스에 끌어다 놓아도 됩니다</div>
+    </div>
+    <div class="card">
+      <h2>Loupedeck CT 미리보기</h2>
+      <div id="device" class="device"></div>
+      <div class="pager">
+        <button id="pgPrev">◀</button><span id="pgLabel">1 / 1</span><button id="pgNext">▶</button>
+      </div>
+      <p class="hint" style="text-align:center;margin:6px 0 0">터치 버튼 12칸 = 목록 순서 · 다이얼 화면 = 선택한 디자인 · 칸 클릭 시 선택</p>
+    </div>
+  </section>
+
+  <!-- 오른쪽: 속성 -->
+  <aside class="card">
+    <details open>
+      <summary>디자인</summary>
+      <label class="f">파일 이름<input type="text" data-scope="design" data-k="name"></label>
+    </details>
+
+    <details open>
+      <summary>배경</summary>
+      <div class="stack">
+        <select data-scope="bg" data-k="type">
+          <option value="transparent">투명</option>
+          <option value="solid">단색</option>
+          <option value="gradient">그라디언트</option>
+        </select>
+        <div class="row" data-show="bg:type=solid"><span class="hint">색</span><input type="color" data-scope="bg" data-k="color"></div>
+        <div class="stack" data-show="bg:type=gradient">
+          <div class="row"><span class="hint">시작</span><input type="color" data-scope="bg" data-k="c1"><span class="hint">끝</span><input type="color" data-scope="bg" data-k="c2"></div>
+          <label class="f">각도 <span class="val"></span><input type="range" min="0" max="360" data-scope="bg" data-k="angle"></label>
+        </div>
+      </div>
+    </details>
+
+    <details open>
+      <summary>이미지 (크롭·크기)</summary>
+      <div class="stack">
+        <button id="imgBtn">이미지 업로드</button>
+        <input id="imgFile" type="file" accept="image/*" hidden>
+        <div class="stack" data-need="image">
+          <label class="f">크기 <span class="val" data-fmt="pct"></span><input type="range" min="0.05" max="5" step="0.01" data-scope="image" data-k="scale"></label>
+          <label class="f">회전 <span class="val" data-fmt="deg"></span><input type="range" min="-180" max="180" data-scope="image" data-k="rotation"></label>
+          <div class="grid2">
+            <button data-img="cover">채우기 (Cover)</button>
+            <button data-img="contain">맞추기 (Contain)</button>
+            <button data-img="orig">원본 크기</button>
+            <button data-img="center">가운데로</button>
+          </div>
+          <button data-img="remove" class="danger">이미지 제거</button>
+          <p class="hint" style="margin:0">300×300 틀이 크롭 영역입니다. 캔버스에서 이미지를 끌어 위치를, 휠로 크기를 맞추세요.</p>
+        </div>
+      </div>
+    </details>
+
+    <details open>
+      <summary>텍스트</summary>
+      <div class="stack">
+        <div class="row"><div id="textChips" class="chips"></div></div>
+        <div class="row"><button id="addText">+ 텍스트 추가</button><button id="delText" class="danger">선택 텍스트 삭제</button></div>
+        <div class="stack" data-need="text">
+          <textarea rows="2" data-scope="text" data-k="content" placeholder="텍스트 (Enter = 줄바꿈)"></textarea>
+          <label class="f">폰트 선택
+            <select id="fontSelect" data-scope="text" data-k="font"></select>
+          </label>
+          <label class="f">또는 설치된 폰트 이름 직접 입력
+            <input type="text" data-scope="text" data-k="font" placeholder="예: Pretendard">
+          </label>
+          <div class="row">
+            <button id="localFonts">로컬 폰트 불러오기</button>
+            <button id="fontFileBtn">폰트 파일 추가</button>
+            <input id="fontFile" type="file" accept=".ttf,.otf,.woff,.woff2" multiple hidden>
+          </div>
+          <div id="fontMsg" class="msg"></div>
+          <div class="grid2">
+            <label class="f">크기(px)<input type="number" min="4" max="600" data-scope="text" data-k="size"></label>
+            <label class="f">굵기
+              <select data-scope="text" data-k="weight">
+                <option value="100">100 Thin</option><option value="200">200</option><option value="300">300 Light</option>
+                <option value="400">400 Regular</option><option value="500">500 Medium</option><option value="600">600</option>
+                <option value="700">700 Bold</option><option value="800">800</option><option value="900">900 Black</option>
+              </select>
+            </label>
+            <label class="f">정렬
+              <select data-scope="text" data-k="align">
+                <option value="left">왼쪽</option><option value="center">가운데</option><option value="right">오른쪽</option>
+              </select>
+            </label>
+            <label class="f" style="align-content:end"><span><input type="checkbox" data-scope="text" data-k="italic"> 기울임</span></label>
+            <label class="f">줄 간격 <span class="val"></span><input type="range" min="0.6" max="2.5" step="0.05" data-scope="text" data-k="lineHeight"></label>
+            <label class="f">자간 <span class="val"></span><input type="range" min="-10" max="40" step="0.5" data-scope="text" data-k="letterSpacing"></label>
+            <label class="f">X<input type="number" data-scope="text" data-k="x"></label>
+            <label class="f">Y<input type="number" data-scope="text" data-k="y"></label>
+          </div>
+          <button id="centerText">가운데로 이동</button>
+
+          <label class="f">글자 채우기
+            <select data-scope="text" data-k="fill.type">
+              <option value="solid">단색</option><option value="gradient">그라디언트</option>
+            </select>
+          </label>
+          <div class="row" data-show="text:fill.type=solid"><span class="hint">글자색</span><input type="color" data-scope="text" data-k="fill.color"></div>
+          <div class="stack" data-show="text:fill.type=gradient">
+            <div class="row"><span class="hint">시작</span><input type="color" data-scope="text" data-k="fill.c1"><span class="hint">끝</span><input type="color" data-scope="text" data-k="fill.c2"></div>
+            <label class="f">각도 <span class="val" data-fmt="deg"></span><input type="range" min="0" max="360" data-scope="text" data-k="fill.angle"></label>
+          </div>
+          <div class="row">
+            <span class="hint">외곽선</span>
+            <input type="range" min="0" max="20" step="0.5" data-scope="text" data-k="stroke.width" style="flex:1">
+            <input type="color" data-scope="text" data-k="stroke.color">
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <details open>
+      <summary>일괄 적용</summary>
+      <button id="applyStyle" style="width:100%">현재 스타일 → 체크한 디자인에 적용</button>
+      <p class="hint" style="margin:6px 0 0">배경과 첫 번째 텍스트의 폰트·크기·색·위치를 복사합니다. 텍스트 내용과 이미지는 유지됩니다.</p>
+    </details>
+  </aside>
+</main>
+<footer id="toast">저장 기능이 없어 새로고침하면 작업이 사라집니다. 로컬 폰트 목록은 Chrome·Edge에서만 불러올 수 있습니다(다른 브라우저는 폰트 이름 입력 또는 폰트 파일 추가).</footer>
+
+<script>
+'use strict';
+const SIZE = 300;            // 출력 해상도 (고정)
+const SLOTS = 12;            // CT 터치 디스플레이 버튼 수 (4×3)
+const GENERIC = ['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy', 'system-ui'];
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => [...document.querySelectorAll(s)];
+const pad = (n) => String(n).padStart(2, '0');
+
+// ───────── 상태 ─────────
+let uid = 1;
+const S = { designs: [], cur: 0, page: 0 };
+const cur = () => S.designs[S.cur];
+const selText = () => { const d = cur(); return d.texts.find((t) => t.id === d.sel) || null; };
+
+function newText(content = 'TEXT') {
+  return {
+    id: 't' + uid++, content, font: 'Apple SD Gothic Neo', size: 64, weight: 700, italic: false,
+    align: 'center', lineHeight: 1.15, letterSpacing: 0, x: 150, y: 150,
+    fill: { type: 'solid', color: '#ffffff', c1: '#ffd84d', c2: '#ff4d8d', angle: 90 },
+    stroke: { width: 0, color: '#000000' },
+  };
+}
+function newDesign() {
+  const t = newText();
+  return {
+    id: uid++, name: 'design-' + pad(S.designs.length + 1), checked: false,
+    bg: { type: 'solid', color: '#111318', c1: '#1e3a8a', c2: '#9333ea', angle: 135 },
+    image: null, texts: [t], sel: t.id,
+  };
+}
+// 깊은 복사 (이미지 엘리먼트는 참조만 공유)
+function cloneDesign(d) {
+  const c = JSON.parse(JSON.stringify({ ...d, image: null }));
+  c.image = d.image ? { ...d.image } : null;
+  c.id = uid++; c.checked = false;
+  return c;
+}
+
+// ───────── 렌더링 (편집기·썸네일·미리보기·내보내기 공용) ─────────
+function fontStr(t) {
+  const fam = t.font.replace(/"/g, '').trim() || 'sans-serif';
+  const famCss = GENERIC.includes(fam) ? fam : `"${fam}", sans-serif`;
+  return `${t.italic ? 'italic ' : ''}${t.weight} ${t.size}px ${famCss}`;
+}
+function setTextStyle(ctx, t) {
+  ctx.font = fontStr(t);
+  if ('letterSpacing' in ctx) ctx.letterSpacing = t.letterSpacing + 'px';
+}
+// 텍스트 박스 측정: y는 블록 세로 중앙, x는 정렬 기준점
+function layoutText(ctx, t) {
+  setTextStyle(ctx, t);
+  const lines = String(t.content).split('\n');
+  const lh = t.size * t.lineHeight;
+  const w = Math.max(1, ...lines.map((l) => ctx.measureText(l).width));
+  const h = lh * lines.length;
+  const left = t.align === 'left' ? t.x : t.align === 'right' ? t.x - w : t.x - w / 2;
+  return { lines, lh, w, h, left, top: t.y - h / 2 };
+}
+// 사각형(x,y,w,h)을 덮는 선형 그라디언트. 각도 0 = 왼→오, 90 = 위→아래
+function boxGradient(ctx, x, y, w, h, angle, c1, c2) {
+  const a = angle * Math.PI / 180, cos = Math.cos(a), sin = Math.sin(a);
+  const half = (Math.abs(w * cos) + Math.abs(h * sin)) / 2;
+  const cx = x + w / 2, cy = y + h / 2;
+  const g = ctx.createLinearGradient(cx - cos * half, cy - sin * half, cx + cos * half, cy + sin * half);
+  g.addColorStop(0, c1); g.addColorStop(1, c2);
+  return g;
+}
+
+function render(d, ctx, guides = false) {
+  const k = ctx.canvas.width / SIZE;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  ctx.setTransform(k, 0, 0, k, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+
+  // 1) 배경
+  if (d.bg.type === 'solid') { ctx.fillStyle = d.bg.color; ctx.fillRect(0, 0, SIZE, SIZE); }
+  else if (d.bg.type === 'gradient') {
+    ctx.fillStyle = boxGradient(ctx, 0, 0, SIZE, SIZE, d.bg.angle, d.bg.c1, d.bg.c2);
+    ctx.fillRect(0, 0, SIZE, SIZE);
+  }
+
+  // 2) 이미지 (중심 x,y 기준 회전·확대)
+  const im = d.image;
+  if (im && im.el.complete && im.el.naturalWidth) {
+    ctx.save();
+    ctx.translate(im.x, im.y); ctx.rotate(im.rotation * Math.PI / 180); ctx.scale(im.scale, im.scale);
+    const w = im.el.naturalWidth, h = im.el.naturalHeight;
+    ctx.drawImage(im.el, -w / 2, -h / 2);
+    if (guides && d.sel === 'image') {
+      ctx.setLineDash([6 / im.scale, 4 / im.scale]); ctx.lineWidth = 1.5 / im.scale; ctx.strokeStyle = '#4da3ff';
+      ctx.strokeRect(-w / 2, -h / 2, w, h);
+    }
+    ctx.restore();
+  }
+
+  // 3) 텍스트
+  for (const t of d.texts) {
+    if (!t.content) continue;
+    const L = layoutText(ctx, t);
+    ctx.textAlign = t.align;
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = t.fill.type === 'gradient'
+      ? boxGradient(ctx, L.left, L.top, L.w, L.h, t.fill.angle, t.fill.c1, t.fill.c2)
+      : t.fill.color;
+    L.lines.forEach((line, i) => {
+      const y = L.top + L.lh * (i + 0.5);
+      if (t.stroke.width > 0) {
+        ctx.lineJoin = 'round'; ctx.lineWidth = t.stroke.width * 2; ctx.strokeStyle = t.stroke.color;
+        ctx.strokeText(line, t.x, y);   // 외곽선을 먼저 그려 채우기가 안쪽 절반을 덮도록
+      }
+      ctx.fillText(line, t.x, y);
+    });
+    if (guides && d.sel === t.id) {
+      ctx.save(); ctx.setLineDash([6, 4]); ctx.lineWidth = 1.5; ctx.strokeStyle = '#4da3ff';
+      ctx.strokeRect(L.left - 4, L.top - 2, L.w + 8, L.h + 4); ctx.restore();
+    }
+  }
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+}
+
+// ───────── DOM: 편집기, 목록, 장비 목업 ─────────
+const editor = $('#editor');
+const ectx = editor.getContext('2d');
+const thumbs = new Map();   // design id → 목록 썸네일 canvas
+let slotCanvases = [];      // 장비 터치 버튼 canvas 12개
+let dialCanvas;
+
+function buildDevice() {
+  const dev = $('#device');
+  // 160×150 장비 좌표 → %
+  const put = (cls, x, y, w, h) => {
+    const el = document.createElement('div'); el.className = cls;
+    el.style.cssText = `left:${x / 1.6}%;top:${y / 1.5}%;width:${w / 1.6}%;height:${h / 1.5}%`;
+    dev.appendChild(el); return el;
+  };
+  [15, 35, 55].forEach((cy) => { put('knob', 11.5, cy - 7.5, 15, 15); put('knob', 133.5, cy - 7.5, 15, 15); });
+  put('bezel', 34, 7, 92, 56);
+  put('strip', 36.5, 10, 7.5, 50); put('strip', 116, 10, 7.5, 50);
+  slotCanvases = [];
+  for (let i = 0; i < SLOTS; i++) {
+    const c = i % 4, r = Math.floor(i / 4);
+    const s = put('slot', 46.25 + c * 17.5, 10 + r * 17.5, 15, 15);
+    const cv = document.createElement('canvas'); cv.width = cv.height = 120;
+    s.appendChild(cv); s.dataset.i = i;
+    s.addEventListener('click', () => { const idx = S.page * SLOTS + i; if (S.designs[idx]) select(idx); });
+    slotCanvases.push(cv);
+  }
+  for (let i = 0; i < 8; i++) put('rbtn', 26 + i * (108 / 7) - 4.5, 67.5, 9, 9);
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 2; c++) {
+    put('sbtn', 14 + c * 14, 94 + r * 14, 11, 11);
+    put('sbtn', 121 + c * 14, 94 + r * 14, 11, 11);
+  }
+  put('dial', 51, 84, 58, 58);
+  const ds = put('dial-screen', 65, 98, 30, 30);
+  dialCanvas = document.createElement('canvas'); dialCanvas.width = dialCanvas.height = 240;
+  ds.appendChild(dialCanvas);
+}
+
+function rebuildList() {
+  const list = $('#list');
+  list.innerHTML = ''; thumbs.clear();
+  S.designs.forEach((d, i) => {
+    const row = document.createElement('div');
+    row.className = 'item' + (i === S.cur ? ' on' : '');
+    const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = d.checked;
+    cb.addEventListener('click', (e) => e.stopPropagation());
+    cb.addEventListener('change', () => { d.checked = cb.checked; updateCounts(); });
+    const cv = document.createElement('canvas'); cv.width = cv.height = 96;
+    const nm = document.createElement('span'); nm.textContent = `${i + 1}. ${d.name}`;
+    row.append(cb, cv, nm);
+    row.addEventListener('click', () => select(i));
+    list.appendChild(row);
+    thumbs.set(d.id, cv);
+  });
+  updateCounts();
+}
+
+function updateCounts() {
+  $('#dlSel').textContent = `선택 ZIP (${S.designs.filter((d) => d.checked).length})`;
+}
+
+function drawDevice() {
+  const pages = Math.max(1, Math.ceil(S.designs.length / SLOTS));
+  S.page = Math.min(S.page, pages - 1);
+  $('#pgLabel').textContent = `${S.page + 1} / ${pages}`;
+  slotCanvases.forEach((cv, i) => {
+    const idx = S.page * SLOTS + i, d = S.designs[idx];
+    cv.parentElement.classList.toggle('on', idx === S.cur);
+    const c = cv.getContext('2d');
+    if (d) render(d, c); else { c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, cv.width, cv.height); }
+  });
+  render(cur(), dialCanvas.getContext('2d'));
+}
+
+// 현재 디자인만 다시 그리기 (드래그 중 가벼운 갱신)
+let raf = 0;
+function changed(full = false) {
+  if (full) needFull = true;
+  if (raf) return;
+  raf = requestAnimationFrame(() => {
+    raf = 0;
+    if (needFull) { needFull = false; rebuildList(); S.designs.forEach((d) => render(d, thumbs.get(d.id).getContext('2d'))); }
+    const d = cur();
+    render(d, ectx, true);
+    const th = thumbs.get(d.id); if (th) render(d, th.getContext('2d'));
+    drawDevice();
+  });
+}
+let needFull = false;
+const refreshAll = () => { syncPanel(); changed(true); };
+
+function select(i) {
+  S.cur = Math.max(0, Math.min(i, S.designs.length - 1));
+  S.page = Math.floor(S.cur / SLOTS);
+  refreshAll();
+}
+
+// ───────── 속성 패널 바인딩 (data-scope + data-k 경로) ─────────
+function target(scope) {
+  const d = cur();
+  return scope === 'design' ? d : scope === 'bg' ? d.bg : scope === 'image' ? d.image : selText();
+}
+const getP = (o, p) => p.split('.').reduce((a, k) => (a == null ? a : a[k]), o);
+const setP = (o, p, v) => { const ks = p.split('.'); const last = ks.pop(); ks.reduce((a, k) => a[k], o)[last] = v; };
+
+function fmtVal(el, v) {
+  const f = el.dataset.fmt;
+  return f === 'pct' ? Math.round(v * 100) + '%' : f === 'deg' ? Math.round(v) + '°' : String(+(+v).toFixed(2));
+}
+
+function syncPanel(skip) {
+  for (const el of $$('[data-k]')) {
+    const o = target(el.dataset.scope);
+    el.disabled = !o;
+    if (!o || el === skip) continue;
+    const v = getP(o, el.dataset.k);
+    if (el.type === 'checkbox') el.checked = !!v; else el.value = v;
+  }
+  for (const el of $$('label.f .val')) {
+    const inp = el.parentElement.querySelector('[data-k]');
+    const o = target(inp.dataset.scope);
+    el.textContent = o ? fmtVal(el, getP(o, inp.dataset.k)) : '';
+  }
+  for (const el of $$('[data-show]')) {
+    const [scope, cond] = el.dataset.show.split(':'); const [k, v] = cond.split('=');
+    const o = target(scope); el.hidden = !o || String(getP(o, k)) !== v;
+  }
+  for (const el of $$('[data-need]')) el.hidden = !target(el.dataset.need);
+  $('#delText').disabled = !selText();
+  // 텍스트 레이어 칩
+  const d = cur(), chips = $('#textChips'); chips.innerHTML = '';
+  d.texts.forEach((t, i) => {
+    const b = document.createElement('button');
+    b.textContent = (t.content.split('\n')[0] || `텍스트 ${i + 1}`).slice(0, 14);
+    b.className = d.sel === t.id ? 'on' : '';
+    b.addEventListener('click', () => { d.sel = t.id; syncPanel(); changed(); });
+    chips.appendChild(b);
+  });
+}
+
+for (const el of $$('[data-k]')) {
+  el.addEventListener('input', () => {
+    const o = target(el.dataset.scope); if (!o) return;
+    let v = el.type === 'checkbox' ? el.checked
+      : (el.type === 'range' || el.type === 'number' || el.dataset.k === 'weight') ? parseFloat(el.value) : el.value;
+    if (typeof v === 'number' && Number.isNaN(v)) return;
+    setP(o, el.dataset.k, v);
+    syncPanel(el);
+    if (el.dataset.k === 'name') changed(true);
+    else changed();
+    if (el.dataset.scope === 'text') loadFontFor(o);
+  });
+}
+
+// ───────── 폰트 ─────────
+const fontNames = new Set(['Apple SD Gothic Neo', 'Pretendard', 'Noto Sans KR', 'Malgun Gothic', 'Helvetica Neue', 'Arial', 'Georgia', 'sans-serif', 'serif', 'monospace']);
+function renderFontList() {
+  const esc = (s) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  $('#fontSelect').innerHTML = [...fontNames].map((f) => `<option value="${esc(f)}" style="font-family:'${esc(f)}'">${esc(f)}</option>`).join('');
+  const t = S.designs.length && selText(); if (t) $('#fontSelect').value = t.font;
+}
+function fontMsg(s) { $('#fontMsg').textContent = s; }
+// 웹폰트(업로드한 FontFace)는 load가 끝나야 캔버스에 반영됨 → 끝나면 다시 그림
+function loadFontFor(t) {
+  if (!t || !document.fonts) return;
+  document.fonts.load(fontStr(t), t.content || 'A').then(() => changed(true)).catch(() => {});
+}
+const ensureFonts = (d) => Promise.all(d.texts.map((t) => document.fonts.load(fontStr(t), t.content || 'A').catch(() => {})));
+
+$('#localFonts').addEventListener('click', async () => {
+  if (!('queryLocalFonts' in window)) {
+    fontMsg('이 브라우저는 로컬 폰트 목록을 지원하지 않습니다. Chrome/Edge를 쓰거나, 설치된 폰트 이름을 직접 입력하세요.');
+    return;
+  }
+  try {
+    const fonts = await window.queryLocalFonts();
+    const before = fontNames.size;
+    fonts.forEach((f) => fontNames.add(f.family));
+    renderFontList();
+    fontMsg(`로컬 폰트 ${fontNames.size - before}개 추가됨. "폰트 선택"에서 고르세요.`);
+  } catch (e) {
+    fontMsg('폰트 접근 권한이 거부되었거나 실패했습니다: ' + e.message);
+  }
+});
+
+async function addFontFiles(files) {
+  for (const f of files) {
+    const name = f.name.replace(/\.(ttf|otf|woff2?)$/i, '');
+    try {
+      const face = new FontFace(name, await f.arrayBuffer());
+      await face.load();
+      document.fonts.add(face);
+      fontNames.add(name);
+      const t = selText(); if (t) t.font = name;
+      fontMsg(`"${name}" 폰트를 추가했습니다.`);
+    } catch (e) { fontMsg(`"${f.name}" 폰트를 읽지 못했습니다.`); }
+  }
+  renderFontList(); refreshAll();
+}
+$('#fontFileBtn').addEventListener('click', () => $('#fontFile').click());
+$('#fontFile').addEventListener('change', (e) => { addFontFiles([...e.target.files]); e.target.value = ''; });
+
+// ───────── 이미지 ─────────
+function loadImage(file) {
+  return new Promise((ok, fail) => {
+    const el = new Image();
+    el.onload = () => ok(el); el.onerror = fail;
+    el.src = URL.createObjectURL(file);   // object URL → 캔버스 오염(taint) 없음
+  });
+}
+function fitImage(im, mode) {
+  const w = im.el.naturalWidth, h = im.el.naturalHeight;
+  im.scale = mode === 'cover' ? Math.max(SIZE / w, SIZE / h) : mode === 'contain' ? Math.min(SIZE / w, SIZE / h) : 1;
+  im.x = im.y = SIZE / 2; im.rotation = 0;
+}
+async function setImage(d, file) {
+  const el = await loadImage(file);
+  d.image = { el, x: 150, y: 150, scale: 1, rotation: 0 };
+  fitImage(d.image, 'cover');
+}
+$('#imgBtn').addEventListener('click', () => $('#imgFile').click());
+$('#imgFile').addEventListener('change', async (e) => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  try { await setImage(cur(), f); cur().sel = 'image'; refreshAll(); } catch { toast('이미지를 읽지 못했습니다.'); }
+});
+for (const b of $$('[data-img]')) b.addEventListener('click', () => {
+  const d = cur(), im = d.image; if (!im) return;
+  const a = b.dataset.img;
+  if (a === 'remove') { d.image = null; if (d.sel === 'image') d.sel = d.texts[0]?.id || null; }
+  else if (a === 'center') { im.x = im.y = SIZE / 2; }
+  else fitImage(im, a === 'orig' ? 'orig' : a);
+  refreshAll();
+});
+
+// ───────── 캔버스 조작: 드래그 이동, 휠 확대 ─────────
+function toCanvas(e) {
+  const r = editor.getBoundingClientRect();
+  return { x: (e.clientX - r.left) * SIZE / r.width, y: (e.clientY - r.top) * SIZE / r.height };
+}
+function hitText(d, p) {
+  for (let i = d.texts.length - 1; i >= 0; i--) {
+    const t = d.texts[i]; if (!t.content) continue;
+    const L = layoutText(ectx, t);
+    if (p.x >= L.left - 6 && p.x <= L.left + L.w + 6 && p.y >= L.top - 4 && p.y <= L.top + L.h + 4) return t;
+  }
+  return null;
+}
+let drag = null;
+editor.addEventListener('pointerdown', (e) => {
+  const d = cur(), p = toCanvas(e);
+  const t = hitText(d, p);
+  if (t) d.sel = t.id; else if (d.image) d.sel = 'image'; else return;
+  const o = t || d.image;
+  drag = { o, sx: p.x, sy: p.y, ox: o.x, oy: o.y };
+  editor.setPointerCapture(e.pointerId);
+  syncPanel(); changed();
+});
+editor.addEventListener('pointermove', (e) => {
+  if (!drag) return;
+  const p = toCanvas(e);
+  drag.o.x = Math.round(drag.ox + p.x - drag.sx);
+  drag.o.y = Math.round(drag.oy + p.y - drag.sy);
+  syncPanel(); changed();
+});
+editor.addEventListener('pointerup', () => { drag = null; });
+editor.addEventListener('pointercancel', () => { drag = null; });
+editor.addEventListener('wheel', (e) => {
+  const d = cur(), t = selText();
+  if (t) {   // 텍스트 선택 중: 글자 크기
+    e.preventDefault();
+    t.size = Math.max(4, Math.min(600, Math.round(t.size * Math.exp(-e.deltaY * 0.0015))));
+  } else if (d.image) {   // 이미지: 포인터 위치 기준 확대/축소
+    e.preventDefault();
+    const im = d.image, p = toCanvas(e);
+    const ns = Math.max(0.02, Math.min(10, im.scale * Math.exp(-e.deltaY * 0.0015)));
+    const k = ns / im.scale;
+    im.x = p.x + (im.x - p.x) * k; im.y = p.y + (im.y - p.y) * k; im.scale = ns;
+  } else return;
+  syncPanel(); changed();
+}, { passive: false });
+
+// 파일 드롭: 이미지 → 현재 디자인, 폰트 파일 → 폰트 추가
+editor.addEventListener('dragover', (e) => e.preventDefault());
+editor.addEventListener('drop', async (e) => {
+  e.preventDefault();
+  const files = [...e.dataTransfer.files];
+  const fonts = files.filter((f) => /\.(ttf|otf|woff2?)$/i.test(f.name));
+  const img = files.find((f) => f.type.startsWith('image/'));
+  if (fonts.length) addFontFiles(fonts);
+  if (img) { try { await setImage(cur(), img); cur().sel = 'image'; refreshAll(); } catch { toast('이미지를 읽지 못했습니다.'); } }
+});
+
+// ───────── 텍스트 레이어 ─────────
+$('#addText').addEventListener('click', () => {
+  const d = cur(), base = selText() || d.texts[d.texts.length - 1];
+  const t = base ? { ...JSON.parse(JSON.stringify(base)), id: 't' + uid++, content: '새 텍스트', y: Math.min(280, base.y + 40) } : newText();
+  d.texts.push(t); d.sel = t.id; refreshAll();
+});
+$('#delText').addEventListener('click', () => {
+  const d = cur(); d.texts = d.texts.filter((t) => t.id !== d.sel);
+  d.sel = d.texts[0]?.id || (d.image ? 'image' : null); refreshAll();
+});
+$('#centerText').addEventListener('click', () => {
+  const t = selText(); if (!t) return;
+  t.y = SIZE / 2;
+  t.x = t.align === 'left' ? Math.round((SIZE - layoutText(ectx, t).w) / 2) : t.align === 'right' ? Math.round((SIZE + layoutText(ectx, t).w) / 2) : SIZE / 2;
+  refreshAll();
+});
+
+// ───────── 디자인 목록 조작 ─────────
+$('#addDesign').addEventListener('click', () => { S.designs.push(newDesign()); select(S.designs.length - 1); });
+$('#dupDesign').addEventListener('click', () => {
+  const c = cloneDesign(cur()); c.name = cur().name + '-copy';
+  S.designs.splice(S.cur + 1, 0, c); select(S.cur + 1);
+});
+$('#delDesign').addEventListener('click', () => {
+  S.designs.splice(S.cur, 1);
+  if (!S.designs.length) S.designs.push(newDesign());
+  select(Math.min(S.cur, S.designs.length - 1));
+});
+function move(dir) {
+  const j = S.cur + dir; if (j < 0 || j >= S.designs.length) return;
+  [S.designs[S.cur], S.designs[j]] = [S.designs[j], S.designs[S.cur]]; select(j);
+}
+$('#moveUp').addEventListener('click', () => move(-1));
+$('#moveDown').addEventListener('click', () => move(1));
+$('#checkAll').addEventListener('click', () => { S.designs.forEach((d) => (d.checked = true)); changed(true); });
+$('#checkNone').addEventListener('click', () => { S.designs.forEach((d) => (d.checked = false)); changed(true); });
+$('#pgPrev').addEventListener('click', () => { S.page = Math.max(0, S.page - 1); changed(); });
+$('#pgNext').addEventListener('click', () => { S.page = Math.min(Math.ceil(S.designs.length / SLOTS) - 1, S.page + 1); changed(); });
+
+// 이미지 여러 장 → 현재 디자인을 템플릿으로 장당 1개
+$('#batchImgBtn').addEventListener('click', () => $('#batchImg').click());
+$('#batchImg').addEventListener('change', async (e) => {
+  const files = [...e.target.files]; e.target.value = '';
+  const tpl = cur(); let at = S.cur + 1, fails = 0;
+  for (const f of files) {
+    const c = cloneDesign(tpl);
+    c.name = f.name.replace(/\.[^.]+$/, '');
+    c.texts = []; c.sel = 'image';   // 이미지 아이콘에 템플릿 텍스트가 찍히지 않도록 배경만 복사
+    try { await setImage(c, f); S.designs.splice(at++, 0, c); } catch { fails++; }
+  }
+  toast(`${files.length - fails}개 디자인을 만들었습니다.` + (fails ? ` (${fails}개 실패)` : ''));
+  select(S.cur + 1);
+});
+
+// 텍스트 일괄 생성
+$('#bulkGo').addEventListener('click', () => {
+  const lines = $('#bulkText').value.split('\n').map((s) => s.trim()).filter(Boolean);
+  if (!lines.length) return toast('텍스트를 한 줄 이상 입력하세요.');
+  const tpl = cur(); let at = S.cur + 1;
+  for (const line of lines) {
+    const c = cloneDesign(tpl);
+    if (!c.texts.length) { const t = newText(); c.texts.push(t); c.sel = t.id; }
+    const t = c.texts.find((x) => x.id === c.sel) || c.texts[0];
+    t.content = line; c.name = line;
+    S.designs.splice(at++, 0, c);
+  }
+  $('#bulkText').value = '';
+  toast(`${lines.length}개 디자인을 만들었습니다.`);
+  select(S.cur + 1);
+});
+
+// 스타일 일괄 적용
+$('#applyStyle').addEventListener('click', () => {
+  const src = cur(), st = src.texts[0];
+  const targets = S.designs.filter((d) => d.checked && d !== src);
+  if (!targets.length) return toast('왼쪽 목록에서 적용할 디자인을 체크하세요.');
+  for (const d of targets) {
+    d.bg = JSON.parse(JSON.stringify(src.bg));
+    if (!st) continue;
+    if (!d.texts.length) { const t = newText(); d.texts.push(t); d.sel = t.id; }
+    const { id, content, ...style } = JSON.parse(JSON.stringify(st));
+    Object.assign(d.texts[0], style);
+  }
+  toast(`${targets.length}개 디자인에 적용했습니다.`);
+  refreshAll();
+});
+
+// ───────── 내보내기: PNG / ZIP ─────────
+async function exportBlob(d) {
+  await ensureFonts(d);
+  const c = document.createElement('canvas'); c.width = c.height = SIZE;   // DPR 곱하지 않음: 정확히 300×300
+  render(d, c.getContext('2d'));
+  return new Promise((ok, fail) => c.toBlob((b) => (b ? ok(b) : fail(new Error('PNG 생성 실패'))), 'image/png'));
+}
+function fileNames(list) {
+  const used = new Map();
+  return list.map((d, i) => {
+    let base = d.name.replace(/[\/\\:*?"<>|\x00-\x1f]/g, '').trim() || 'design-' + pad(i + 1);
+    const n = (used.get(base) || 0) + 1; used.set(base, n);
+    return (n > 1 ? `${base}-${n}` : base) + '.png';
+  });
+}
+function saveBlob(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+
+// CRC32 + STORE 방식 ZIP (PNG는 이미 압축돼 있어 무압축 저장이면 충분)
+const CRC_T = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; }
+  return t;
+})();
+function crc32(u8) { let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = CRC_T[(c ^ u8[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function makeZip(files) {   // files: [{ name, data: Uint8Array }]
+  const enc = new TextEncoder(), now = new Date();
+  const time = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1);
+  const date = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+  const parts = [], central = []; let off = 0;
+  for (const f of files) {
+    const nm = enc.encode(f.name), crc = crc32(f.data), sz = f.data.length;
+    const L = new DataView(new ArrayBuffer(30));
+    L.setUint32(0, 0x04034b50, true); L.setUint16(4, 20, true); L.setUint16(6, 0x0800, true);   // 0x0800 = 파일명 UTF-8 (한글)
+    L.setUint16(10, time, true); L.setUint16(12, date, true); L.setUint32(14, crc, true);
+    L.setUint32(18, sz, true); L.setUint32(22, sz, true); L.setUint16(26, nm.length, true);
+    parts.push(L.buffer, nm, f.data);
+    const C = new DataView(new ArrayBuffer(46));
+    C.setUint32(0, 0x02014b50, true); C.setUint16(4, 20, true); C.setUint16(6, 20, true); C.setUint16(8, 0x0800, true);
+    C.setUint16(12, time, true); C.setUint16(14, date, true); C.setUint32(16, crc, true);
+    C.setUint32(20, sz, true); C.setUint32(24, sz, true); C.setUint16(28, nm.length, true); C.setUint32(42, off, true);
+    central.push(C.buffer, nm);
+    off += 30 + nm.length + sz;
+  }
+  const cdSize = central.reduce((s, p) => s + p.byteLength, 0);
+  const E = new DataView(new ArrayBuffer(22));
+  E.setUint32(0, 0x06054b50, true); E.setUint16(8, files.length, true); E.setUint16(10, files.length, true);
+  E.setUint32(12, cdSize, true); E.setUint32(16, off, true);
+  return new Blob([...parts, ...central, E.buffer], { type: 'application/zip' });
+}
+if (crc32(new TextEncoder().encode('123456789')) !== 0xCBF43926) console.error('CRC32 자체 검사 실패');
+
+async function downloadMany(list) {
+  if (!list.length) return toast('다운로드할 디자인이 없습니다. 목록에서 체크하세요.');
+  if (list.length === 1) return saveBlob(await exportBlob(list[0]), fileNames(list)[0]);
+  const names = fileNames(list), files = [];
+  for (let i = 0; i < list.length; i++) files.push({ name: names[i], data: new Uint8Array(await (await exportBlob(list[i])).arrayBuffer()) });
+  saveBlob(makeZip(files), 'loupedeck-ct-images.zip');
+  toast(`${list.length}장을 ZIP으로 저장했습니다.`);
+}
+$('#dlCur').addEventListener('click', async () => saveBlob(await exportBlob(cur()), fileNames([cur()])[0]));
+$('#dlSel').addEventListener('click', () => downloadMany(S.designs.filter((d) => d.checked)));
+$('#dlAll').addEventListener('click', () => downloadMany(S.designs));
+
+const footerDefault = $('#toast').textContent;
+let toastTimer;
+function toast(s) {
+  const el = $('#toast'); el.textContent = '✔ ' + s; el.style.color = 'var(--accent)';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.textContent = footerDefault; el.style.color = ''; }, 4000);
+}
+
+// ───────── 시작 ─────────
+document.fonts?.addEventListener?.('loadingdone', () => changed(true));
+buildDevice();
+renderFontList();
+S.designs.push(newDesign());
+refreshAll();
+</script>
+</body>
+</html>
