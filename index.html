@@ -6,59 +6,86 @@
 <title>CT 디스플레이 스튜디오</title>
 <style>
   :root {
-    --bg: #0f1013; --panel: #17191d; --panel2: #1e2126; --line: #2b2f36;
-    --text: #e8eaed; --muted: #9aa0a8; --accent: #4da3ff; --danger: #ff6b6b;
+    --bg: #0b0c0e; --pane: #131418; --pane2: #1a1c21; --line: #24272d; --line2: #30343b;
+    --stage: #0e0f12; --text: #e9ebee; --muted: #8d939c; --accent: #4da3ff; --accent-dim: #1a2a3d; --danger: #ff6b6b;
+    --r: 8px;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text);
-    font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", sans-serif; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text); display: grid; grid-template-rows: auto minmax(0, 1fr);
+    font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", sans-serif; overflow: hidden; }
   button, input, select, textarea { font: inherit; color: inherit; }
-  button { background: var(--panel2); border: 1px solid var(--line); border-radius: 7px; padding: 6px 10px; cursor: pointer; }
-  button:hover { border-color: #3d434c; background: #252930; }
+  button { background: var(--pane2); border: 1px solid var(--line2); border-radius: 7px; padding: 6px 11px; cursor: pointer; white-space: nowrap; }
+  button:hover:not(:disabled) { background: #23262d; border-color: #3c414a; }
+  button:disabled { opacity: .4; cursor: default; }
   button.primary { background: var(--accent); border-color: var(--accent); color: #04121f; font-weight: 600; }
+  button.primary:hover { background: #6bb3ff; }
+  button.ghost { background: transparent; border-color: transparent; color: var(--muted); }
+  button.ghost:hover:not(:disabled) { color: var(--text); background: var(--pane2); }
   button.danger { color: var(--danger); }
+  button.wide { width: 100%; }
   input[type=text], input[type=number], select, textarea {
-    background: #0c0d10; border: 1px solid var(--line); border-radius: 6px; padding: 5px 7px; width: 100%; }
-  input[type=color] { width: 34px; height: 28px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: none; }
-  input[type=range] { width: 100%; accent-color: var(--accent); }
+    background: #0c0d10; border: 1px solid var(--line2); border-radius: 6px; padding: 6px 8px; width: 100%; min-width: 0; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+  input[type=color] { width: 30px; height: 30px; padding: 2px; border: 1px solid var(--line2); border-radius: 6px; background: #0c0d10; cursor: pointer; flex: none; }
+  input[type=range] { width: 100%; accent-color: var(--accent); margin: 2px 0; }
+  input[type=checkbox] { accent-color: var(--accent); }
   textarea { resize: vertical; }
   :disabled { opacity: .45; }
+  [hidden] { display: none !important; }
+  .hint { color: var(--muted); font-size: 12px; margin: 0; }
 
-  header { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
-  header h1 { font-size: 15px; margin: 0 auto 0 0; }
-  .app { display: grid; grid-template-columns: 240px minmax(0, 1fr) 320px; gap: 12px; padding: 12px 16px; align-items: start; }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
-  .card h2 { font-size: 12px; color: var(--muted); font-weight: 600; margin: 0 0 8px; letter-spacing: .02em; }
-  .row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-  .row > * { flex: 1 1 auto; }
-  .row > button, .row > input[type=color] { flex: 0 0 auto; }
-  .stack { display: grid; gap: 8px; }
-  label.f { display: grid; gap: 3px; color: var(--muted); font-size: 12px; }
-  label.f .val { color: var(--text); float: right; font-variant-numeric: tabular-nums; }
-  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .hint { color: var(--muted); font-size: 12px; }
-  .msg { color: var(--accent); font-size: 12px; min-height: 1em; }
+  /* ── 상단 바 ── */
+  .top { display: flex; align-items: center; gap: 8px; height: 52px; padding: 0 16px; border-bottom: 1px solid var(--line); background: var(--pane); }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 14px; margin-right: auto; }
+  .logo { width: 24px; height: 24px; border-radius: 7px; background: linear-gradient(135deg, var(--accent), #9b6bff); }
+  .chip { font-size: 11px; font-weight: 600; color: var(--muted); border: 1px solid var(--line2); border-radius: 999px; padding: 2px 8px; }
 
-  /* 왼쪽 목록 */
-  .list { display: grid; gap: 6px; max-height: 52vh; overflow: auto; margin: 8px 0; }
-  .item { display: flex; align-items: center; gap: 8px; padding: 5px; border: 1px solid transparent; border-radius: 8px; cursor: pointer; }
-  .item:hover { background: var(--panel2); }
-  .item.on { border-color: var(--accent); background: #1a2533; }
-  .item canvas { width: 48px; height: 48px; border-radius: 6px; flex: none; background: #000; }
-  .item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+  /* ── 3분할 셸 ── */
+  .shell { display: grid; grid-template-columns: 264px minmax(0, 1fr) 340px; min-height: 0; }
+  .pane { background: var(--pane); display: flex; flex-direction: column; min-height: 0; }
+  .pane.left { border-right: 1px solid var(--line); }
+  .pane.right { border-left: 1px solid var(--line); }
+  .pane-head { display: flex; align-items: center; gap: 6px; padding: 12px 14px 8px; }
+  .pane-head h2 { font-size: 13px; margin: 0 auto 0 0; }
+  .badge { color: var(--muted); font-weight: 500; margin-left: 4px; }
 
-  /* 가운데 편집기 */
-  .center { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
-  .editor-wrap { display: grid; justify-items: center; gap: 8px; }
-  #editor { width: min(100%, 420px); aspect-ratio: 1; border-radius: 6px; cursor: grab; touch-action: none;
-    background: repeating-conic-gradient(#2a2d33 0 25%, #1f2227 0 50%) 0 0 / 20px 20px; }
+  /* 왼쪽: 썸네일 타일 */
+  .toolbar { display: flex; gap: 4px; padding: 0 14px 10px; border-bottom: 1px solid var(--line); }
+  .tiles { flex: 1; overflow: auto; padding: 12px 14px; display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; align-content: start; }
+  .tile { position: relative; cursor: pointer; border-radius: var(--r); padding: 6px; border: 1px solid transparent; }
+  .tile:hover { background: var(--pane2); }
+  .tile.on { border-color: var(--accent); background: var(--accent-dim); }
+  .tile canvas { width: 100%; aspect-ratio: 1; display: block; border-radius: 6px; background: #000; }
+  .tile .nm { display: flex; gap: 4px; margin-top: 6px; font-size: 12px; }
+  .tile .nm b { color: var(--muted); font-weight: 500; }
+  .tile .nm span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tile input { position: absolute; top: 10px; left: 10px; width: 16px; height: 16px; margin: 0; }
+  .batch { border-top: 1px solid var(--line); padding: 10px 14px; }
+  .batch summary { cursor: pointer; font-weight: 600; }
+  .batch .stack { margin-top: 10px; }
+  .note { padding: 8px 14px 12px; border-top: 1px solid var(--line); }
+
+  /* 가운데: 스테이지 */
+  .stage { min-height: 0; overflow: auto; background: var(--stage);
+    background-image: radial-gradient(#1c1e23 1px, transparent 1px); background-size: 18px 18px; }
+  .stage-inner { min-height: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px; align-items: center; justify-items: center; padding: 32px; }
+  .view { margin: 0; display: grid; justify-items: center; gap: 12px; width: 100%; }
+  .view figcaption { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: .02em; }
+  #editor { width: min(100%, calc(100vh - 290px), 520px); aspect-ratio: 1; border-radius: 4px; cursor: grab; touch-action: none;
+    background: repeating-conic-gradient(#25282e 0 25%, #1b1d22 0 50%) 0 0 / 20px 20px; box-shadow: 0 0 0 1px var(--line2), 0 20px 50px #0008; }
   #editor:active { cursor: grabbing; }
-  .size-badge { color: var(--muted); font-size: 12px; }
+  .align-bar { display: flex; align-items: center; gap: 2px; padding: 3px; background: var(--pane); border: 1px solid var(--line2); border-radius: 9px; }
+  .align-bar button { width: 32px; height: 30px; padding: 0; display: grid; place-items: center; background: transparent; border: 0; }
+  .align-bar button:hover { background: var(--pane2); }
+  .align-bar svg { width: 16px; height: 16px; fill: currentColor; stroke: currentColor; stroke-width: 1.4; }
+  .align-bar svg rect { stroke: none; opacity: .85; }
+  .align-bar .sep { width: 1px; height: 18px; background: var(--line2); margin: 0 4px; }
 
   /* 장비 목업: 160×150 좌표계를 %로 배치 */
-  .device { position: relative; width: 100%; max-width: 440px; margin: 0 auto; aspect-ratio: 160 / 150;
+  .device { position: relative; width: min(100%, calc((100vh - 260px) * 1.067), 560px); aspect-ratio: 160 / 150;
     background: linear-gradient(160deg, #34373d, #1c1d21 70%); border-radius: 7% / 7.5%;
-    box-shadow: 0 18px 40px #000a, inset 0 1px 0 #ffffff14; }
+    box-shadow: 0 24px 60px #000c, inset 0 1px 0 #ffffff14; }
   .device > * { position: absolute; }
   .knob { border-radius: 50%; background: radial-gradient(circle at 35% 30%, #63666d, #2a2c31 55%, #141518);
     box-shadow: inset 0 0 0 1px #000, 0 2px 4px #0009; }
@@ -72,185 +99,249 @@
   .dial { border-radius: 50%; background: repeating-conic-gradient(#2a2c31 0 2deg, #1c1e22 2deg 4deg);
     box-shadow: 0 4px 10px #000a, inset 0 0 0 2px #111; }
   .dial-screen { border-radius: 50%; overflow: hidden; background: #000; box-shadow: 0 0 0 2px #050505; }
-  .pager { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px; }
+  .pager { display: flex; align-items: center; gap: 8px; color: var(--muted); }
 
-  /* 오른쪽 속성 */
-  details { border-top: 1px solid var(--line); padding: 8px 0; }
-  details:first-of-type { border-top: 0; padding-top: 0; }
-  summary { cursor: pointer; font-weight: 600; margin-bottom: 8px; }
+  /* 오른쪽: 인스펙터 */
+  .name-field { padding: 12px 14px 10px; display: grid; gap: 4px; }
+  .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; margin: 0 14px; padding: 3px; background: #0c0d10; border-radius: 8px; border: 1px solid var(--line); }
+  .tabs button { border: 0; background: transparent; padding: 6px 0; color: var(--muted); border-radius: 6px; }
+  .tabs button.on { background: var(--pane2); color: var(--text); box-shadow: 0 0 0 1px var(--line2); }
+  .panels { flex: 1; overflow: auto; padding: 14px; }
+  .group { display: grid; gap: 10px; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid var(--line); }
+  .group:last-child { border-bottom: 0; margin-bottom: 0; }
+  .group h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0; font-weight: 600; }
+  .stack { display: grid; gap: 8px; }
+  .row { display: flex; gap: 6px; align-items: center; }
+  .row > .grow { flex: 1; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  label.f { display: grid; grid-template-columns: 1fr auto; gap: 4px 8px; align-items: center; font-size: 12px; color: var(--muted); }
+  label.f > input:not([type=checkbox]), label.f > select, label.f > textarea { grid-column: 1 / -1; }
+  label.f .val { color: var(--text); font-variant-numeric: tabular-nums; }
+  .swatches { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+  .swatches .sep { flex: 1; }
   .chips { display: flex; gap: 4px; flex-wrap: wrap; }
-  .chips button { padding: 3px 8px; font-size: 12px; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .chips button.on { border-color: var(--accent); color: var(--accent); }
-  [hidden] { display: none !important; }
-  footer { padding: 4px 16px 16px; color: var(--muted); font-size: 12px; }
+  .chips button { padding: 4px 9px; font-size: 12px; max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
+  .chips button.on { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+  .seg { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--line2); border-radius: 6px; overflow: hidden; }
+  .msg { color: var(--accent); font-size: 12px; }
+  .msg:empty { display: none; }
+  .empty { color: var(--muted); font-size: 12px; text-align: center; padding: 18px 8px; border: 1px dashed var(--line2); border-radius: var(--r); }
 
-  @media (max-width: 1280px) { .center { grid-template-columns: 1fr; } }
-  @media (max-width: 1000px) { .app { grid-template-columns: 1fr; } .list { max-height: 240px; } }
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #1f2a38; color: var(--text);
+    border: 1px solid #2f4a6b; padding: 9px 16px; border-radius: 999px; box-shadow: 0 10px 30px #000a; z-index: 10; }
+
+  @media (max-width: 1380px) { .stage-inner { grid-template-columns: 1fr; gap: 28px; }
+    #editor { width: min(100%, 460px); } .device { width: min(100%, 480px); } }
+  @media (max-width: 960px) {
+    body { display: block; overflow: auto; height: auto; }
+    .top { flex-wrap: wrap; height: auto; padding: 10px 16px; }
+    .shell { display: block; }
+    .pane.left, .pane.right { border: 0; border-bottom: 1px solid var(--line); }
+    .tiles { max-height: 260px; }
+    .stage-inner { padding: 20px 16px; }
+    .panels { overflow: visible; }
+  }
 </style>
 </head>
 <body>
-<header>
-  <h1>CT 디스플레이 스튜디오 <span class="hint">· 300×300 PNG</span></h1>
-  <button id="dlCur" class="primary">현재 이미지 PNG</button>
+<header class="top">
+  <div class="brand"><span class="logo" aria-hidden="true"></span>CT 디스플레이 스튜디오<span class="chip">300 × 300 PNG</span></div>
+  <button id="dlCur" class="primary">현재 PNG 저장</button>
   <button id="dlSel">선택 ZIP (0)</button>
   <button id="dlAll">전체 ZIP</button>
 </header>
 
-<main class="app">
+<main class="shell">
   <!-- 왼쪽: 디자인 목록 -->
-  <aside class="card">
-    <h2>디자인 목록</h2>
-    <div class="row">
-      <button id="addDesign">+ 새로 만들기</button>
-      <button id="dupDesign">복제</button>
-      <button id="delDesign" class="danger">삭제</button>
+  <aside class="pane left">
+    <div class="pane-head">
+      <h2>디자인<span id="countBadge" class="badge"></span></h2>
+      <button id="addDesign" title="새 디자인">+ 새로</button>
+      <button id="dupDesign" title="복제">복제</button>
     </div>
-    <div class="row" style="margin-top:6px">
-      <button id="moveUp" title="위로">↑</button>
-      <button id="moveDown" title="아래로">↓</button>
-      <button id="checkAll">전체 선택</button>
-      <button id="checkNone">해제</button>
+    <div class="toolbar">
+      <button id="moveUp" class="ghost" title="앞으로">←</button>
+      <button id="moveDown" class="ghost" title="뒤로">→</button>
+      <button id="checkAll" class="ghost">전체 선택</button>
+      <button id="checkNone" class="ghost">해제</button>
+      <button id="delDesign" class="ghost danger" style="margin-left:auto">삭제</button>
     </div>
-    <div id="list" class="list"></div>
-    <div class="stack">
-      <button id="batchImgBtn">이미지 여러 장 → 장당 1개 생성</button>
-      <input id="batchImg" type="file" accept="image/*" multiple hidden>
-      <label class="f">텍스트 일괄 생성 (한 줄 = 디자인 1개)
-        <textarea id="bulkText" rows="4" placeholder="녹화 시작&#10;장면 전환&#10;마이크 끄기"></textarea>
-      </label>
-      <button id="bulkGo">줄마다 디자인 만들기</button>
-      <p class="hint" style="margin:0">이미지 일괄 생성은 지금 디자인의 배경만, 텍스트 일괄 생성은 배경·텍스트 스타일을 복사합니다.</p>
-    </div>
+    <div id="list" class="tiles"></div>
+    <details class="batch" open>
+      <summary>일괄 생성</summary>
+      <div class="stack">
+        <button id="batchImgBtn" class="wide">이미지 여러 장 → 장당 1개</button>
+        <input id="batchImg" type="file" accept="image/*" multiple hidden>
+        <textarea id="bulkText" rows="3" placeholder="한 줄 = 디자인 1개&#10;녹화 시작&#10;장면 전환"></textarea>
+        <button id="bulkGo" class="wide">줄마다 디자인 만들기</button>
+        <p class="hint">이미지는 배경만, 텍스트는 배경·글자 스타일까지 지금 디자인을 복사합니다.</p>
+      </div>
+    </details>
+    <p class="hint note">저장 기능이 없어 새로고침하면 작업이 사라집니다.</p>
   </aside>
 
   <!-- 가운데: 편집 캔버스 + 장비 미리보기 -->
-  <section class="center">
-    <div class="card editor-wrap">
-      <h2 style="justify-self:start">편집 (드래그 = 이동, 휠 = 크기)</h2>
-      <canvas id="editor" width="300" height="300"></canvas>
-      <div class="size-badge">실제 출력 300 × 300 px · 이미지/폰트 파일은 캔버스에 끌어다 놓아도 됩니다</div>
-    </div>
-    <div class="card">
-      <h2>Loupedeck CT 미리보기</h2>
-      <div id="device" class="device"></div>
-      <div class="pager">
-        <button id="pgPrev">◀</button><span id="pgLabel">1 / 1</span><button id="pgNext">▶</button>
-      </div>
-      <p class="hint" style="text-align:center;margin:6px 0 0">터치 버튼 12칸 = 목록 순서 · 다이얼 화면 = 선택한 디자인 · 칸 클릭 시 선택</p>
+  <section class="stage">
+    <div class="stage-inner">
+      <figure class="view">
+        <figcaption>편집 · 실제 출력 300 × 300 px</figcaption>
+        <div class="align-bar" role="toolbar" aria-label="선택 레이어 정렬">
+          <button data-align="left" title="왼쪽 맞춤"><svg viewBox="0 0 16 16"><path d="M2 1v14"/><rect x="4" y="3" width="9" height="3"/><rect x="4" y="9" width="6" height="3"/></svg></button>
+          <button data-align="hcenter" title="가로 가운데"><svg viewBox="0 0 16 16"><path d="M8 1v14"/><rect x="3" y="3" width="10" height="3"/><rect x="5" y="9" width="6" height="3"/></svg></button>
+          <button data-align="right" title="오른쪽 맞춤"><svg viewBox="0 0 16 16"><path d="M14 1v14"/><rect x="3" y="3" width="9" height="3"/><rect x="6" y="9" width="6" height="3"/></svg></button>
+          <span class="sep"></span>
+          <button data-align="top" title="위쪽 맞춤"><svg viewBox="0 0 16 16"><path d="M1 2h14"/><rect x="3" y="4" width="3" height="9"/><rect x="9" y="4" width="3" height="6"/></svg></button>
+          <button data-align="vmiddle" title="세로 가운데"><svg viewBox="0 0 16 16"><path d="M1 8h14"/><rect x="3" y="3" width="3" height="10"/><rect x="9" y="5" width="3" height="6"/></svg></button>
+          <button data-align="bottom" title="아래쪽 맞춤"><svg viewBox="0 0 16 16"><path d="M1 14h14"/><rect x="3" y="3" width="3" height="9"/><rect x="9" y="6" width="3" height="6"/></svg></button>
+        </div>
+        <canvas id="editor" width="900" height="900"></canvas>
+        <p class="hint">드래그 = 이동 · 휠 = 크기 · 이미지·폰트 파일을 끌어다 놓기</p>
+      </figure>
+      <figure class="view">
+        <figcaption>Loupedeck CT 미리보기</figcaption>
+        <div id="device" class="device"></div>
+        <div class="pager">
+          <button id="pgPrev" class="ghost">◀</button><span id="pgLabel">1 / 1</span><button id="pgNext" class="ghost">▶</button>
+        </div>
+        <p class="hint">터치 버튼 12칸 = 목록 순서 · 다이얼 = 선택한 디자인</p>
+      </figure>
     </div>
   </section>
 
-  <!-- 오른쪽: 속성 -->
-  <aside class="card">
-    <details open>
-      <summary>디자인</summary>
-      <label class="f">파일 이름<input type="text" data-scope="design" data-k="name"></label>
-    </details>
+  <!-- 오른쪽: 인스펙터 -->
+  <aside class="pane right">
+    <label class="name-field hint">파일 이름<input type="text" data-scope="design" data-k="name"></label>
+    <nav class="tabs" role="tablist">
+      <button data-tab="text" class="on">텍스트</button>
+      <button data-tab="image">이미지</button>
+      <button data-tab="bg">배경</button>
+      <button data-tab="batch">일괄 적용</button>
+    </nav>
+    <div class="panels">
 
-    <details open>
-      <summary>배경</summary>
-      <div class="stack">
-        <select data-scope="bg" data-k="type">
-          <option value="transparent">투명</option>
-          <option value="solid">단색</option>
-          <option value="gradient">그라디언트</option>
-        </select>
-        <div class="row" data-show="bg:type=solid"><span class="hint">색</span><input type="color" data-scope="bg" data-k="color"></div>
-        <div class="stack" data-show="bg:type=gradient">
-          <div class="row"><span class="hint">시작</span><input type="color" data-scope="bg" data-k="c1"><span class="hint">끝</span><input type="color" data-scope="bg" data-k="c2"></div>
-          <label class="f">각도 <span class="val"></span><input type="range" min="0" max="360" data-scope="bg" data-k="angle"></label>
+      <!-- 텍스트 -->
+      <div data-panel="text">
+        <div class="group">
+          <div class="row"><h3 class="grow">레이어</h3><button id="addText">+ 추가</button><button id="delText" class="ghost danger">삭제</button></div>
+          <div id="textChips" class="chips"></div>
         </div>
-      </div>
-    </details>
-
-    <details open>
-      <summary>이미지 (크롭·크기)</summary>
-      <div class="stack">
-        <button id="imgBtn">이미지 업로드</button>
-        <input id="imgFile" type="file" accept="image/*" hidden>
-        <div class="stack" data-need="image">
-          <label class="f">크기 <span class="val" data-fmt="pct"></span><input type="range" min="0.05" max="5" step="0.01" data-scope="image" data-k="scale"></label>
-          <label class="f">회전 <span class="val" data-fmt="deg"></span><input type="range" min="-180" max="180" data-scope="image" data-k="rotation"></label>
-          <div class="grid2">
-            <button data-img="cover">채우기 (Cover)</button>
-            <button data-img="contain">맞추기 (Contain)</button>
-            <button data-img="orig">원본 크기</button>
-            <button data-img="center">가운데로</button>
+        <div data-need="text">
+          <div class="group">
+            <h3>내용</h3>
+            <textarea rows="2" data-scope="text" data-k="content" placeholder="텍스트 (Enter = 줄바꿈)"></textarea>
           </div>
-          <button data-img="remove" class="danger">이미지 제거</button>
-          <p class="hint" style="margin:0">300×300 틀이 크롭 영역입니다. 캔버스에서 이미지를 끌어 위치를, 휠로 크기를 맞추세요.</p>
-        </div>
-      </div>
-    </details>
-
-    <details open>
-      <summary>텍스트</summary>
-      <div class="stack">
-        <div class="row"><div id="textChips" class="chips"></div></div>
-        <div class="row"><button id="addText">+ 텍스트 추가</button><button id="delText" class="danger">선택 텍스트 삭제</button></div>
-        <div class="stack" data-need="text">
-          <textarea rows="2" data-scope="text" data-k="content" placeholder="텍스트 (Enter = 줄바꿈)"></textarea>
-          <label class="f">폰트 선택
-            <select id="fontSelect" data-scope="text" data-k="font"></select>
-          </label>
-          <label class="f">또는 설치된 폰트 이름 직접 입력
-            <input type="text" data-scope="text" data-k="font" placeholder="예: Pretendard">
-          </label>
-          <div class="row">
-            <button id="localFonts">로컬 폰트 불러오기</button>
-            <button id="fontFileBtn">폰트 파일 추가</button>
+          <div class="group">
+            <h3>폰트</h3>
+            <label class="f">패밀리<select id="fontSelect" data-scope="text" data-k="font"></select></label>
+            <label class="f" id="styleWrap">스타일<select id="styleSelect" data-scope="text" data-k="fontStyle"></select></label>
+            <input type="text" data-scope="text" data-k="font" placeholder="설치된 폰트 이름 직접 입력" aria-label="폰트 이름">
+            <div class="grid2">
+              <button id="localFonts">로컬 폰트 불러오기</button>
+              <button id="fontFileBtn">폰트 파일 추가</button>
+            </div>
             <input id="fontFile" type="file" accept=".ttf,.otf,.woff,.woff2" multiple hidden>
+            <div id="fontMsg" class="msg"></div>
+            <div class="grid2">
+              <label class="f">크기(px)<input type="number" min="4" max="600" data-scope="text" data-k="size"></label>
+              <label class="f">굵기
+                <select data-scope="text" data-k="weight">
+                  <option value="100">100 Thin</option><option value="200">200</option><option value="300">300 Light</option>
+                  <option value="400">400 Regular</option><option value="500">500 Medium</option><option value="600">600</option>
+                  <option value="700">700 Bold</option><option value="800">800</option><option value="900">900 Black</option>
+                </select>
+              </label>
+              <label class="f">정렬
+                <select data-scope="text" data-k="align">
+                  <option value="left">왼쪽</option><option value="center">가운데</option><option value="right">오른쪽</option>
+                </select>
+              </label>
+              <label class="f" style="align-self:end;justify-content:start"><span><input type="checkbox" data-scope="text" data-k="italic"> 기울임</span></label>
+              <label class="f">줄 간격<span class="val"></span><input type="range" min="0.6" max="2.5" step="0.05" data-scope="text" data-k="lineHeight"></label>
+              <label class="f">자간<span class="val"></span><input type="range" min="-10" max="40" step="0.5" data-scope="text" data-k="letterSpacing"></label>
+            </div>
           </div>
-          <div id="fontMsg" class="msg"></div>
-          <div class="grid2">
-            <label class="f">크기(px)<input type="number" min="4" max="600" data-scope="text" data-k="size"></label>
-            <label class="f">굵기
-              <select data-scope="text" data-k="weight">
-                <option value="100">100 Thin</option><option value="200">200</option><option value="300">300 Light</option>
-                <option value="400">400 Regular</option><option value="500">500 Medium</option><option value="600">600</option>
-                <option value="700">700 Bold</option><option value="800">800</option><option value="900">900 Black</option>
+          <div class="group">
+            <h3>색</h3>
+            <div class="seg" style="grid-template-columns:1fr">
+              <select data-scope="text" data-k="fill.type" aria-label="채우기 방식">
+                <option value="solid">단색</option><option value="gradient">그라디언트</option>
               </select>
-            </label>
-            <label class="f">정렬
-              <select data-scope="text" data-k="align">
-                <option value="left">왼쪽</option><option value="center">가운데</option><option value="right">오른쪽</option>
-              </select>
-            </label>
-            <label class="f" style="align-content:end"><span><input type="checkbox" data-scope="text" data-k="italic"> 기울임</span></label>
-            <label class="f">줄 간격 <span class="val"></span><input type="range" min="0.6" max="2.5" step="0.05" data-scope="text" data-k="lineHeight"></label>
-            <label class="f">자간 <span class="val"></span><input type="range" min="-10" max="40" step="0.5" data-scope="text" data-k="letterSpacing"></label>
-            <label class="f">X<input type="number" data-scope="text" data-k="x"></label>
-            <label class="f">Y<input type="number" data-scope="text" data-k="y"></label>
+            </div>
+            <div class="swatches" data-show="text:fill.type=solid">글자색<span class="sep"></span><input type="color" data-scope="text" data-k="fill.color"></div>
+            <div class="stack" data-show="text:fill.type=gradient">
+              <div class="swatches">시작<input type="color" data-scope="text" data-k="fill.c1"><span class="sep"></span>끝<input type="color" data-scope="text" data-k="fill.c2"></div>
+              <label class="f">각도<span class="val" data-fmt="deg"></span><input type="range" min="0" max="360" data-scope="text" data-k="fill.angle"></label>
+            </div>
+            <label class="f">외곽선 두께<span class="val"></span><input type="range" min="0" max="20" step="0.5" data-scope="text" data-k="stroke.width"></label>
+            <div class="swatches">외곽선 색<span class="sep"></span><input type="color" data-scope="text" data-k="stroke.color"></div>
           </div>
-          <button id="centerText">가운데로 이동</button>
-
-          <label class="f">글자 채우기
-            <select data-scope="text" data-k="fill.type">
-              <option value="solid">단색</option><option value="gradient">그라디언트</option>
-            </select>
-          </label>
-          <div class="row" data-show="text:fill.type=solid"><span class="hint">글자색</span><input type="color" data-scope="text" data-k="fill.color"></div>
-          <div class="stack" data-show="text:fill.type=gradient">
-            <div class="row"><span class="hint">시작</span><input type="color" data-scope="text" data-k="fill.c1"><span class="hint">끝</span><input type="color" data-scope="text" data-k="fill.c2"></div>
-            <label class="f">각도 <span class="val" data-fmt="deg"></span><input type="range" min="0" max="360" data-scope="text" data-k="fill.angle"></label>
-          </div>
-          <div class="row">
-            <span class="hint">외곽선</span>
-            <input type="range" min="0" max="20" step="0.5" data-scope="text" data-k="stroke.width" style="flex:1">
-            <input type="color" data-scope="text" data-k="stroke.color">
+          <div class="group">
+            <h3>위치</h3>
+            <div class="grid2">
+              <label class="f">X<input type="number" data-scope="text" data-k="x"></label>
+              <label class="f">Y<input type="number" data-scope="text" data-k="y"></label>
+            </div>
+            <button id="centerText" class="wide">가운데로 이동</button>
           </div>
         </div>
       </div>
-    </details>
 
-    <details open>
-      <summary>일괄 적용</summary>
-      <button id="applyStyle" style="width:100%">현재 스타일 → 체크한 디자인에 적용</button>
-      <p class="hint" style="margin:6px 0 0">배경과 첫 번째 텍스트의 폰트·크기·색·위치를 복사합니다. 텍스트 내용과 이미지는 유지됩니다.</p>
-    </details>
+      <!-- 이미지 -->
+      <div data-panel="image" hidden>
+        <div class="group">
+          <h3>이미지</h3>
+          <button id="imgBtn" class="wide">이미지 업로드</button>
+          <input id="imgFile" type="file" accept="image/*" hidden>
+          <p class="empty" data-need-not="image">이미지가 없습니다. 업로드하거나 캔버스에 끌어다 놓으세요.</p>
+        </div>
+        <div data-need="image">
+          <div class="group">
+            <h3>크롭 · 크기</h3>
+            <label class="f">크기<span class="val" data-fmt="pct"></span><input type="range" min="0.05" max="5" step="0.01" data-scope="image" data-k="scale"></label>
+            <label class="f">회전<span class="val" data-fmt="deg"></span><input type="range" min="-180" max="180" data-scope="image" data-k="rotation"></label>
+            <div class="grid2">
+              <button data-img="cover">채우기 (Cover)</button>
+              <button data-img="contain">맞추기 (Contain)</button>
+              <button data-img="orig">원본 크기</button>
+              <button data-img="center">가운데로</button>
+            </div>
+            <p class="hint">300×300 틀이 크롭 영역입니다. 캔버스에서 끌어 위치를, 휠로 크기를 맞추세요.</p>
+          </div>
+          <div class="group">
+            <button data-img="remove" class="wide danger">이미지 제거</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 배경 -->
+      <div data-panel="bg" hidden>
+        <div class="group">
+          <h3>배경</h3>
+          <select data-scope="bg" data-k="type" aria-label="배경 종류">
+            <option value="transparent">투명</option>
+            <option value="solid">단색</option>
+            <option value="gradient">그라디언트</option>
+          </select>
+          <div class="swatches" data-show="bg:type=solid">색<span class="sep"></span><input type="color" data-scope="bg" data-k="color"></div>
+          <div class="stack" data-show="bg:type=gradient">
+            <div class="swatches">시작<input type="color" data-scope="bg" data-k="c1"><span class="sep"></span>끝<input type="color" data-scope="bg" data-k="c2"></div>
+            <label class="f">각도<span class="val" data-fmt="deg"></span><input type="range" min="0" max="360" data-scope="bg" data-k="angle"></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- 일괄 적용 -->
+      <div data-panel="batch" hidden>
+        <div class="group">
+          <h3>스타일 일괄 적용</h3>
+          <button id="applyStyle" class="wide primary">현재 스타일 → 체크한 디자인에 적용</button>
+          <p class="hint">배경과 첫 번째 텍스트의 폰트·크기·색·위치를 복사합니다. 텍스트 내용과 이미지는 그대로 둡니다. 왼쪽 목록에서 썸네일 체크박스로 대상을 고르세요.</p>
+        </div>
+      </div>
+    </div>
   </aside>
 </main>
-<footer id="toast">저장 기능이 없어 새로고침하면 작업이 사라집니다. 로컬 폰트 목록은 Chrome·Edge에서만 불러올 수 있습니다(다른 브라우저는 폰트 이름 입력 또는 폰트 파일 추가).</footer>
+<div id="toast" class="toast" hidden></div>
 
 <script>
 'use strict';
@@ -269,7 +360,7 @@ const selText = () => { const d = cur(); return d.texts.find((t) => t.id === d.s
 
 function newText(content = 'TEXT') {
   return {
-    id: 't' + uid++, content, font: 'Apple SD Gothic Neo', size: 64, weight: 700, italic: false,
+    id: 't' + uid++, content, font: 'Apple SD Gothic Neo', fontStyle: '', size: 64, weight: 700, italic: false,
     align: 'center', lineHeight: 1.15, letterSpacing: 0, x: 150, y: 150,
     fill: { type: 'solid', color: '#ffffff', c1: '#ffd84d', c2: '#ff4d8d', angle: 90 },
     stroke: { width: 0, color: '#000000' },
@@ -292,7 +383,12 @@ function cloneDesign(d) {
 }
 
 // ───────── 렌더링 (편집기·썸네일·미리보기·내보내기 공용) ─────────
+const localFaces = new Map();   // 패밀리 → [{ style, ps, full }] (queryLocalFonts 결과)
+const faceAlias = new Map();    // "패밀리|스타일" → 등록한 FontFace 이름
 function fontStr(t) {
+  // 스타일(예: Pretendard ExtraBold)을 고르면 그 폰트 면 자체로 그림 → 가짜 볼드/기울임 없이 실제 스타일 그대로
+  const alias = t.fontStyle && faceAlias.get(t.font + '|' + t.fontStyle);
+  if (alias) return `400 ${t.size}px "${alias}", sans-serif`;
   const fam = t.font.replace(/"/g, '').trim() || 'sans-serif';
   const famCss = GENERIC.includes(fam) ? fam : `"${fam}", sans-serif`;
   return `${t.italic ? 'italic ' : ''}${t.weight} ${t.size}px ${famCss}`;
@@ -373,6 +469,13 @@ function render(d, ctx, guides = false) {
     }
   }
   if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+  // 드래그 흡착 안내선 (편집기에서만)
+  if (guides && (snapLines.v !== null || snapLines.h !== null)) {
+    ctx.save(); ctx.strokeStyle = '#ff4d8d'; ctx.lineWidth = 1;
+    if (snapLines.v !== null) { ctx.beginPath(); ctx.moveTo(snapLines.v, 0); ctx.lineTo(snapLines.v, SIZE); ctx.stroke(); }
+    if (snapLines.h !== null) { ctx.beginPath(); ctx.moveTo(0, snapLines.h); ctx.lineTo(SIZE, snapLines.h); ctx.stroke(); }
+    ctx.restore();
+  }
 }
 
 // ───────── DOM: 편집기, 목록, 장비 목업 ─────────
@@ -418,13 +521,17 @@ function rebuildList() {
   list.innerHTML = ''; thumbs.clear();
   S.designs.forEach((d, i) => {
     const row = document.createElement('div');
-    row.className = 'item' + (i === S.cur ? ' on' : '');
+    row.className = 'tile' + (i === S.cur ? ' on' : '');
     const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = d.checked;
+    cb.title = '다운로드·일괄 적용 대상으로 체크';
     cb.addEventListener('click', (e) => e.stopPropagation());
     cb.addEventListener('change', () => { d.checked = cb.checked; updateCounts(); });
-    const cv = document.createElement('canvas'); cv.width = cv.height = 96;
-    const nm = document.createElement('span'); nm.textContent = `${i + 1}. ${d.name}`;
-    row.append(cb, cv, nm);
+    const cv = document.createElement('canvas'); cv.width = cv.height = 180;
+    const nm = document.createElement('div'); nm.className = 'nm';
+    const no = document.createElement('b'); no.textContent = i + 1;
+    const tx = document.createElement('span'); tx.textContent = d.name;
+    nm.append(no, tx);
+    row.append(cv, cb, nm);
     row.addEventListener('click', () => select(i));
     list.appendChild(row);
     thumbs.set(d.id, cv);
@@ -433,8 +540,18 @@ function rebuildList() {
 }
 
 function updateCounts() {
-  $('#dlSel').textContent = `선택 ZIP (${S.designs.filter((d) => d.checked).length})`;
+  const n = S.designs.filter((d) => d.checked).length;
+  $('#dlSel').textContent = `선택 ZIP (${n})`;
+  $('#dlSel').disabled = !n;
+  $('#countBadge').textContent = S.designs.length;
 }
+
+// 오른쪽 인스펙터 탭
+function showTab(name) {
+  for (const b of $$('[data-tab]')) b.classList.toggle('on', b.dataset.tab === name);
+  for (const p of $$('[data-panel]')) p.hidden = p.dataset.panel !== name;
+}
+for (const b of $$('[data-tab]')) b.addEventListener('click', () => showTab(b.dataset.tab));
 
 function drawDevice() {
   const pages = Math.max(1, Math.ceil(S.designs.length / SLOTS));
@@ -486,6 +603,14 @@ function fmtVal(el, v) {
 }
 
 function syncPanel(skip) {
+  // 폰트 스타일 목록은 현재 패밀리가 바뀔 때만 다시 만듦
+  const st = S.designs.length && selText(), sel = $('#styleSelect');
+  const styles = st ? (localFaces.get(st.font) || []) : [];
+  $('#styleWrap').hidden = !styles.length;
+  if (sel.dataset.fam !== (st ? st.font : '')) {
+    sel.dataset.fam = st ? st.font : '';
+    sel.innerHTML = '<option value="">굵기 직접 지정</option>' + styles.map((s) => `<option value="${esc(s.style)}">${esc(s.style)}</option>`).join('');
+  }
   for (const el of $$('[data-k]')) {
     const o = target(el.dataset.scope);
     el.disabled = !o;
@@ -503,6 +628,11 @@ function syncPanel(skip) {
     const o = target(scope); el.hidden = !o || String(getP(o, k)) !== v;
   }
   for (const el of $$('[data-need]')) el.hidden = !target(el.dataset.need);
+  for (const el of $$('[data-need-not]')) el.hidden = !!target(el.dataset.needNot);
+  // 스타일을 골랐으면 굵기·기울임은 스타일이 정하므로 잠금
+  const styled = !!(st && st.fontStyle);
+  $('[data-scope=text][data-k=weight]').disabled = !st || styled;
+  $('[data-scope=text][data-k=italic]').disabled = !st || styled;
   $('#delText').disabled = !selText();
   // 텍스트 레이어 칩
   const d = cur(), chips = $('#textChips'); chips.innerHTML = '';
@@ -522,17 +652,45 @@ for (const el of $$('[data-k]')) {
       : (el.type === 'range' || el.type === 'number' || el.dataset.k === 'weight') ? parseFloat(el.value) : el.value;
     if (typeof v === 'number' && Number.isNaN(v)) return;
     setP(o, el.dataset.k, v);
+    // 패밀리를 바꾸면 지금 굵기에 맞는 스타일을 자동 선택 (없으면 굵기 직접 지정)
+    if (el.dataset.k === 'font') o.fontStyle = pickStyle(o.font, o.weight, o.italic);
     syncPanel(el);
     if (el.dataset.k === 'name') changed(true);
     else changed();
-    if (el.dataset.scope === 'text') loadFontFor(o);
+    if (el.dataset.scope === 'text') { prepareFace(o); loadFontFor(o); }
   });
 }
 
 // ───────── 폰트 ─────────
 const fontNames = new Set(['Apple SD Gothic Neo', 'Pretendard', 'Noto Sans KR', 'Malgun Gothic', 'Helvetica Neue', 'Arial', 'Georgia', 'sans-serif', 'serif', 'monospace']);
+// 스타일 이름으로 굵기 추정 (정렬·자동 선택용)
+const WEIGHT_WORDS = [[/hairline|thin/i, 100], [/extra\s*light|ultra\s*light/i, 200], [/light/i, 300], [/medium/i, 500],
+  [/semi\s*bold|demi\s*bold/i, 600], [/extra\s*bold|ultra\s*bold/i, 800], [/black|heavy/i, 900], [/bold/i, 700]];
+function guessWeight(style) { for (const [re, w] of WEIGHT_WORDS) if (re.test(style)) return w; return 400; }
+const isItalic = (style) => /italic|oblique/i.test(style);
+function pickStyle(family, weight, italic) {
+  const list = localFaces.get(family) || [];
+  const hit = list.find((s) => guessWeight(s.style) === weight && isItalic(s.style) === !!italic);
+  return hit ? hit.style : '';
+}
+// 고른 스타일의 로컬 폰트 면을 FontFace로 등록 (local() 참조라 파일 복사 없음)
+async function prepareFace(t) {
+  if (!t || !t.fontStyle) return;
+  const key = t.font + '|' + t.fontStyle;
+  if (faceAlias.has(key)) return;
+  const f = (localFaces.get(t.font) || []).find((s) => s.style === t.fontStyle);
+  if (!f) return;
+  const clean = (s) => s.replace(/["\\]/g, '');
+  try {
+    const face = new FontFace('ctface-' + clean(f.ps), `local("${clean(f.full)}"), local("${clean(f.ps)}")`);
+    await face.load();
+    document.fonts.add(face);
+    faceAlias.set(key, face.family.replace(/"/g, ''));
+    refreshAll();
+  } catch { fontMsg(`"${f.full}" 스타일을 불러오지 못했습니다. 굵기 직접 지정으로 그립니다.`); }
+}
+const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 function renderFontList() {
-  const esc = (s) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
   $('#fontSelect').innerHTML = [...fontNames].map((f) => `<option value="${esc(f)}" style="font-family:'${esc(f)}'">${esc(f)}</option>`).join('');
   const t = S.designs.length && selText(); if (t) $('#fontSelect').value = t.font;
 }
@@ -551,10 +709,20 @@ $('#localFonts').addEventListener('click', async () => {
   }
   try {
     const fonts = await window.queryLocalFonts();
-    const before = fontNames.size;
-    fonts.forEach((f) => fontNames.add(f.family));
+    localFaces.clear();
+    for (const f of fonts) {
+      fontNames.add(f.family);
+      if (!localFaces.has(f.family)) localFaces.set(f.family, []);
+      localFaces.get(f.family).push({ style: f.style, ps: f.postscriptName, full: f.fullName });
+    }
+    // 스타일은 가는 것 → 두꺼운 것, 같은 굵기면 기울임을 뒤로
+    for (const list of localFaces.values()) list.sort((a, b) => guessWeight(a.style) - guessWeight(b.style) || isItalic(a.style) - isItalic(b.style));
     renderFontList();
-    fontMsg(`로컬 폰트 ${fontNames.size - before}개 추가됨. "폰트 선택"에서 고르세요.`);
+    $('#styleSelect').dataset.fam = '';   // 스타일 목록 다시 만들기
+    const t = selText();
+    if (t && !t.fontStyle) { t.fontStyle = pickStyle(t.font, t.weight, t.italic); prepareFace(t); }
+    refreshAll();
+    fontMsg(`패밀리 ${localFaces.size}개 · 스타일 ${fonts.length}개를 불러왔습니다.`);
   } catch (e) {
     fontMsg('폰트 접근 권한이 거부되었거나 실패했습니다: ' + e.message);
   }
@@ -568,7 +736,7 @@ async function addFontFiles(files) {
       await face.load();
       document.fonts.add(face);
       fontNames.add(name);
-      const t = selText(); if (t) t.font = name;
+      const t = selText(); if (t) { t.font = name; t.fontStyle = ''; }
       fontMsg(`"${name}" 폰트를 추가했습니다.`);
     } catch (e) { fontMsg(`"${f.name}" 폰트를 읽지 못했습니다.`); }
   }
@@ -599,7 +767,7 @@ $('#imgBtn').addEventListener('click', () => $('#imgFile').click());
 $('#imgFile').addEventListener('change', async (e) => {
   const f = e.target.files[0]; e.target.value = '';
   if (!f) return;
-  try { await setImage(cur(), f); cur().sel = 'image'; refreshAll(); } catch { toast('이미지를 읽지 못했습니다.'); }
+  try { await setImage(cur(), f); cur().sel = 'image'; showTab('image'); refreshAll(); } catch { toast('이미지를 읽지 못했습니다.'); }
 });
 for (const b of $$('[data-img]')) b.addEventListener('click', () => {
   const d = cur(), im = d.image; if (!im) return;
@@ -623,11 +791,35 @@ function hitText(d, p) {
   }
   return null;
 }
+// ───────── 정렬 맞춤 ─────────
+// 선택 레이어의 화면상 박스 (이미지는 회전까지 반영한 외곽 박스)
+function layerBox(d) {
+  const t = selText();
+  if (t) { const L = layoutText(ectx, t); return { o: t, l: L.left, t: L.top, r: L.left + L.w, b: L.top + L.h }; }
+  const im = d.sel === 'image' && d.image;
+  if (!im) return null;
+  const a = im.rotation * Math.PI / 180, w = im.el.naturalWidth * im.scale, h = im.el.naturalHeight * im.scale;
+  const hw = (Math.abs(w * Math.cos(a)) + Math.abs(h * Math.sin(a))) / 2, hh = (Math.abs(w * Math.sin(a)) + Math.abs(h * Math.cos(a))) / 2;
+  return { o: im, l: im.x - hw, t: im.y - hh, r: im.x + hw, b: im.y + hh };
+}
+function alignLayer(mode) {
+  const B = layerBox(cur()); if (!B) return toast('정렬할 텍스트나 이미지를 먼저 선택하세요.');
+  const dx = { left: -B.l, hcenter: SIZE / 2 - (B.l + B.r) / 2, right: SIZE - B.r }[mode] || 0;
+  const dy = { top: -B.t, vmiddle: SIZE / 2 - (B.t + B.b) / 2, bottom: SIZE - B.b }[mode] || 0;
+  B.o.x = Math.round(B.o.x + dx); B.o.y = Math.round(B.o.y + dy);
+  syncPanel(); changed();
+}
+for (const b of $$('[data-align]')) b.addEventListener('click', () => alignLayer(b.dataset.align));
+
+// ───────── 드래그 (가운데·가장자리 근처에서 자석처럼 붙음) ─────────
+const SNAP = 5;   // 캔버스 px 기준 흡착 거리
 let drag = null;
+let snapLines = { v: null, h: null };   // 편집기에만 그리는 안내선 위치
 editor.addEventListener('pointerdown', (e) => {
   const d = cur(), p = toCanvas(e);
   const t = hitText(d, p);
   if (t) d.sel = t.id; else if (d.image) d.sel = 'image'; else return;
+  showTab(t ? 'text' : 'image');
   const o = t || d.image;
   drag = { o, sx: p.x, sy: p.y, ox: o.x, oy: o.y };
   editor.setPointerCapture(e.pointerId);
@@ -638,10 +830,20 @@ editor.addEventListener('pointermove', (e) => {
   const p = toCanvas(e);
   drag.o.x = Math.round(drag.ox + p.x - drag.sx);
   drag.o.y = Math.round(drag.oy + p.y - drag.sy);
+  snapLines = { v: null, h: null };
+  if (!e.altKey) {   // Alt(Option) 누르면 흡착 끔
+    const B = layerBox(cur());
+    const cx = (B.l + B.r) / 2, cy = (B.t + B.b) / 2;
+    const vx = [[cx, SIZE / 2], [B.l, 0], [B.r, SIZE]].find(([v, g]) => Math.abs(v - g) < SNAP);
+    const hy = [[cy, SIZE / 2], [B.t, 0], [B.b, SIZE]].find(([v, g]) => Math.abs(v - g) < SNAP);
+    if (vx) { drag.o.x += vx[1] - vx[0]; snapLines.v = vx[1]; }
+    if (hy) { drag.o.y += hy[1] - hy[0]; snapLines.h = hy[1]; }
+  }
   syncPanel(); changed();
 });
-editor.addEventListener('pointerup', () => { drag = null; });
-editor.addEventListener('pointercancel', () => { drag = null; });
+const endDrag = () => { drag = null; snapLines = { v: null, h: null }; changed(); };
+editor.addEventListener('pointerup', endDrag);
+editor.addEventListener('pointercancel', endDrag);
 editor.addEventListener('wheel', (e) => {
   const d = cur(), t = selText();
   if (t) {   // 텍스트 선택 중: 글자 크기
@@ -823,12 +1025,11 @@ $('#dlCur').addEventListener('click', async () => saveBlob(await exportBlob(cur(
 $('#dlSel').addEventListener('click', () => downloadMany(S.designs.filter((d) => d.checked)));
 $('#dlAll').addEventListener('click', () => downloadMany(S.designs));
 
-const footerDefault = $('#toast').textContent;
 let toastTimer;
 function toast(s) {
-  const el = $('#toast'); el.textContent = '✔ ' + s; el.style.color = 'var(--accent)';
+  const el = $('#toast'); el.textContent = s; el.hidden = false;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { el.textContent = footerDefault; el.style.color = ''; }, 4000);
+  toastTimer = setTimeout(() => { el.hidden = true; }, 3000);
 }
 
 // ───────── 시작 ─────────
