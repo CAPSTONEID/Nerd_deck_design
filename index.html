@@ -405,7 +405,20 @@ function layoutText(ctx, t) {
   const w = Math.max(1, ...lines.map((l) => ctx.measureText(l).width));
   const h = lh * lines.length;
   const left = t.align === 'left' ? t.x : t.align === 'right' ? t.x - w : t.x - w / 2;
-  return { lines, lh, w, h, left, top: t.y - h / 2 };
+  const top = t.y - h / 2;
+  // 실제 글자 잉크 경계 (선택 박스·정렬·흡착 기준). 글자 폭(advance)·줄 간격 여백은 빼고 외곽선 두께는 포함
+  ctx.textAlign = t.align; ctx.textBaseline = 'middle';
+  const sw = t.stroke.width > 0 ? t.stroke.width : 0;
+  let il = Infinity, ir = -Infinity, it = Infinity, ib = -Infinity;
+  lines.forEach((l, i) => {
+    const m = ctx.measureText(l);
+    if (!l.trim() || m.actualBoundingBoxLeft + m.actualBoundingBoxRight <= 0) return;
+    const y = top + lh * (i + 0.5);
+    il = Math.min(il, t.x - m.actualBoundingBoxLeft - sw); ir = Math.max(ir, t.x + m.actualBoundingBoxRight + sw);
+    it = Math.min(it, y - m.actualBoundingBoxAscent - sw); ib = Math.max(ib, y + m.actualBoundingBoxDescent + sw);
+  });
+  if (il === Infinity) { il = left; ir = left + w; it = top; ib = top + h; }   // 공백뿐이면 줄 박스로
+  return { lines, lh, w, h, left, top, il, ir, it, ib };
 }
 // 사각형(x,y,w,h)을 덮는 선형 그라디언트. 각도 0 = 왼→오, 90 = 위→아래
 function boxGradient(ctx, x, y, w, h, angle, c1, c2) {
@@ -465,7 +478,7 @@ function render(d, ctx, guides = false) {
     });
     if (guides && d.sel === t.id) {
       ctx.save(); ctx.setLineDash([6, 4]); ctx.lineWidth = 1.5; ctx.strokeStyle = '#4da3ff';
-      ctx.strokeRect(L.left - 4, L.top - 2, L.w + 8, L.h + 4); ctx.restore();
+      ctx.strokeRect(L.il, L.it, L.ir - L.il, L.ib - L.it); ctx.restore();
     }
   }
   if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
@@ -795,7 +808,7 @@ function hitText(d, p) {
 // 선택 레이어의 화면상 박스 (이미지는 회전까지 반영한 외곽 박스)
 function layerBox(d) {
   const t = selText();
-  if (t) { const L = layoutText(ectx, t); return { o: t, l: L.left, t: L.top, r: L.left + L.w, b: L.top + L.h }; }
+  if (t) { const L = layoutText(ectx, t); return { o: t, l: L.il, t: L.it, r: L.ir, b: L.ib }; }
   const im = d.sel === 'image' && d.image;
   if (!im) return null;
   const a = im.rotation * Math.PI / 180, w = im.el.naturalWidth * im.scale, h = im.el.naturalHeight * im.scale;
@@ -806,7 +819,8 @@ function alignLayer(mode) {
   const B = layerBox(cur()); if (!B) return toast('정렬할 텍스트나 이미지를 먼저 선택하세요.');
   const dx = { left: -B.l, hcenter: SIZE / 2 - (B.l + B.r) / 2, right: SIZE - B.r }[mode] || 0;
   const dy = { top: -B.t, vmiddle: SIZE / 2 - (B.t + B.b) / 2, bottom: SIZE - B.b }[mode] || 0;
-  B.o.x = Math.round(B.o.x + dx); B.o.y = Math.round(B.o.y + dy);
+  // 정수 반올림하면 최대 0.5px 어긋나므로 소수 둘째 자리까지 유지
+  B.o.x = Math.round((B.o.x + dx) * 100) / 100; B.o.y = Math.round((B.o.y + dy) * 100) / 100;
   syncPanel(); changed();
 }
 for (const b of $$('[data-align]')) b.addEventListener('click', () => alignLayer(b.dataset.align));
@@ -882,8 +896,10 @@ $('#delText').addEventListener('click', () => {
 });
 $('#centerText').addEventListener('click', () => {
   const t = selText(); if (!t) return;
-  t.y = SIZE / 2;
-  t.x = t.align === 'left' ? Math.round((SIZE - layoutText(ectx, t).w) / 2) : t.align === 'right' ? Math.round((SIZE + layoutText(ectx, t).w) / 2) : SIZE / 2;
+  // 글자 잉크 박스의 중심을 캔버스 정중앙에
+  const L = layoutText(ectx, t);
+  t.x = Math.round((t.x + SIZE / 2 - (L.il + L.ir) / 2) * 100) / 100;
+  t.y = Math.round((t.y + SIZE / 2 - (L.it + L.ib) / 2) * 100) / 100;
   refreshAll();
 });
 
