@@ -119,6 +119,11 @@
   label.f .val { color: var(--text); font-variant-numeric: tabular-nums; }
   .swatches { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
   .swatches .sep { flex: 1; }
+  /* 즐겨찾는 색 (네온 프리셋) */
+  .presets { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+  .presets .lbl { margin-right: auto; }
+  .presets .sw, .presets .sw:hover:not(:disabled) { width: 24px; height: 24px; padding: 0; border-radius: 50%; background: var(--c); border: 1px solid var(--line2); }
+  .presets .sw:hover:not(:disabled) { border-color: var(--text); transform: scale(1.1); }
   .chips { display: flex; gap: 4px; flex-wrap: wrap; }
   .chips button { padding: 4px 9px; font-size: 12px; max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
   .chips button.on { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
@@ -268,8 +273,19 @@
               </select>
             </div>
             <div class="swatches" data-show="text:fill.type=solid">글자색<span class="sep"></span><input type="color" data-scope="text" data-k="fill.color"></div>
+            <div class="presets" data-show="text:fill.type=solid"><span class="lbl">즐겨찾는 색</span>
+              <button class="sw" data-fill='{"color":"#c6ff00"}' style="--c:#c6ff00" title="네온 라임" aria-label="네온 라임"></button>
+              <button class="sw" data-fill='{"color":"#00c2ff"}' style="--c:#00c2ff" title="네온 블루" aria-label="네온 블루"></button>
+              <button class="sw" data-fill='{"color":"#fff01f"}' style="--c:#fff01f" title="네온 옐로우" aria-label="네온 옐로우"></button>
+            </div>
             <div class="stack" data-show="text:fill.type=gradient">
               <div class="swatches">시작<input type="color" data-scope="text" data-k="fill.c1"><span class="sep"></span>끝<input type="color" data-scope="text" data-k="fill.c2"></div>
+              <div class="presets"><span class="lbl">추천 네온</span>
+                <button class="sw" data-fill='{"c1":"#c6ff00","c2":"#00e5ff"}' style="--c:linear-gradient(135deg,#c6ff00,#00e5ff)" title="라임 → 시안" aria-label="라임에서 시안 그라디언트"></button>
+                <button class="sw" data-fill='{"c1":"#00e5ff","c2":"#b026ff"}' style="--c:linear-gradient(135deg,#00e5ff,#b026ff)" title="시안 → 퍼플" aria-label="시안에서 퍼플 그라디언트"></button>
+                <button class="sw" data-fill='{"c1":"#fff01f","c2":"#ff2e88"}' style="--c:linear-gradient(135deg,#fff01f,#ff2e88)" title="옐로우 → 핑크" aria-label="옐로우에서 핑크 그라디언트"></button>
+                <button class="sw" data-fill='{"c1":"#ff6a00","c2":"#ffe600"}' style="--c:linear-gradient(135deg,#ff6a00,#ffe600)" title="오렌지 → 옐로우" aria-label="오렌지에서 옐로우 그라디언트"></button>
+              </div>
               <label class="f">각도<span class="val" data-fmt="deg"></span><input type="range" min="0" max="360" data-scope="text" data-k="fill.angle"></label>
             </div>
             <label class="f">외곽선 두께<span class="val"></span><input type="range" min="0" max="20" step="0.5" data-scope="text" data-k="stroke.width"></label>
@@ -673,6 +689,12 @@ for (const el of $$('[data-k]')) {
     if (el.dataset.scope === 'text') { prepareFace(o); loadFontFor(o); }
   });
 }
+
+// 즐겨찾는 색: 버튼의 data-fill 값을 선택 텍스트의 채우기에 덮어씀
+for (const b of $$('[data-fill]')) b.addEventListener('click', () => {
+  const t = selText(); if (!t) return toast('색을 바꿀 텍스트를 먼저 선택하세요.');
+  Object.assign(t.fill, JSON.parse(b.dataset.fill)); syncPanel(); changed();
+});
 
 // ───────── 폰트 ─────────
 const fontNames = new Set(['Apple SD Gothic Neo', 'Pretendard', 'Noto Sans KR', 'Malgun Gothic', 'Helvetica Neue', 'Arial', 'Georgia', 'sans-serif', 'serif', 'monospace']);
