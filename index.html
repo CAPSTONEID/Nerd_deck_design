@@ -360,8 +360,8 @@ const selText = () => { const d = cur(); return d.texts.find((t) => t.id === d.s
 
 function newText(content = 'TEXT') {
   return {
-    id: 't' + uid++, content, font: 'Apple SD Gothic Neo', fontStyle: '', size: 64, weight: 700, italic: false,
-    align: 'center', lineHeight: 1.15, letterSpacing: 0, x: 150, y: 150,
+    id: 't' + uid++, content, font: 'Apple SD Gothic Neo', fontStyle: '', size: 50, weight: 700, italic: false,
+    align: 'center', lineHeight: 1, letterSpacing: 0, x: 150, y: 150,
     fill: { type: 'solid', color: '#ffffff', c1: '#ffd84d', c2: '#ff4d8d', angle: 90 },
     stroke: { width: 0, color: '#000000' },
   };
@@ -370,7 +370,7 @@ function newDesign() {
   const t = newText();
   return {
     id: uid++, name: 'design-' + pad(S.designs.length + 1), checked: false,
-    bg: { type: 'solid', color: '#111318', c1: '#1e3a8a', c2: '#9333ea', angle: 135 },
+    bg: { type: 'solid', color: '#000000', c1: '#1e3a8a', c2: '#9333ea', angle: 135 },
     image: null, texts: [t], sel: t.id,
   };
 }
