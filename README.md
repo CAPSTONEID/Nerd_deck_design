@@ -1,4 +1,4 @@
-# CT 디스플레이 스튜디오
+# LOUPEDECK ICON STUDIO
 
 Loupedeck CT 버튼·다이얼 화면에 넣을 300×300 PNG 이미지를 만드는 웹 도구입니다.
 
