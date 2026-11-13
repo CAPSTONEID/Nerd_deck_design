@@ -450,6 +450,14 @@
             <div class="prop"><span class="k">글로우 색</span>
               <span class="color"><input type="color" data-scope="text" data-k="glow.color"><input type="text" data-hex maxlength="7" data-scope="text" data-k="glow.color" aria-label="글로우 색 HEX"></span></div>
           </div>
+          <div class="group">
+            <h3>하드 그림자</h3>
+            <label class="f">가로 X<span class="val"></span><input type="range" min="-20" max="20" step="1" data-scope="text" data-k="shadow.x"></label>
+            <label class="f">세로 Y<span class="val"></span><input type="range" min="-20" max="20" step="1" data-scope="text" data-k="shadow.y"></label>
+            <div class="prop"><span class="k">그림자 색</span>
+              <span class="color"><input type="color" data-scope="text" data-k="shadow.color"><input type="text" data-hex maxlength="7" data-scope="text" data-k="shadow.color" aria-label="그림자 색 HEX"></span></div>
+            <p class="hint">번짐 없이 글자를 비껴 찍은 그림자입니다. X·Y가 둘 다 0이면 꺼집니다.</p>
+          </div>
         </div>
       </div>
 
@@ -499,6 +507,13 @@
             <label class="f">각도<span class="val" data-fmt="deg"></span><input type="range" min="0" max="360" data-scope="bg" data-k="angle"></label>
           </div>
         </div>
+        <div class="group">
+          <h3>테두리</h3>
+          <label class="f">두께<span class="val"></span><input type="range" min="0" max="40" step="1" data-scope="bg" data-k="border.width"></label>
+          <div class="prop"><span class="k">색</span>
+            <span class="color"><input type="color" data-scope="bg" data-k="border.color"><input type="text" data-hex maxlength="7" data-scope="bg" data-k="border.color" aria-label="테두리 색 HEX"></span></div>
+          <p class="hint">300×300 칸 가장자리에 안쪽으로 그립니다 (네오브루탈리즘용 굵은 테두리).</p>
+        </div>
       </div>
 
       <!-- 일괄 적용 -->
@@ -516,6 +531,7 @@
             <label class="check"><input type="checkbox" data-ap="fill" checked> 글자색</label>
             <label class="check"><input type="checkbox" data-ap="stroke" checked> 외곽선</label>
             <label class="check"><input type="checkbox" data-ap="glow" checked> 글로우</label>
+            <label class="check"><input type="checkbox" data-ap="shadow" checked> 하드 그림자</label>
             <label class="check"><input type="checkbox" data-ap="pos" checked> 위치 X·Y</label>
             <label class="check"><input type="checkbox" data-ap="content"> 내용(글자)</label>
           </div>
@@ -610,7 +626,7 @@
       <h3>스타일 프리셋</h3>
       <div class="row"><input id="presetName" class="grow" type="text" placeholder="프리셋 이름"><button id="presetSave">현재 스타일 저장</button></div>
       <div id="presetList" class="preset-list"></div>
-      <p class="hint">선택한 텍스트의 폰트·굵기·기울임·크기·정렬·줄 간격·자간·글자색·외곽선·글로우와 배경을 저장합니다. 적용하면 지금 디자인과 프레임 줄에서 체크한 디자인에 들어갑니다(내용·위치·이미지는 그대로). 같은 이름으로 저장하면 덮어씁니다.</p>
+      <p class="hint">선택한 텍스트의 폰트·굵기·기울임·크기·정렬·줄 간격·자간·글자색·외곽선·글로우·하드 그림자와 배경(테두리 포함)을 저장합니다. 적용하면 지금 디자인과 프레임 줄에서 체크한 디자인에 들어갑니다(내용·위치·이미지는 그대로). 같은 이름으로 저장하면 덮어씁니다. 기본 제공 프리셋(기본·브루탈리즘)은 크기·정렬·폰트는 그대로 두고 굵기·색·효과·배경만 바꿉니다.</p>
     </div>
   </div>
 </dialog>
@@ -655,13 +671,14 @@ const textDefaults = () => ({
   fill: { type: 'solid', color: '#ffffff', c1: '#ffd84d', c2: '#ff4d8d', angle: 90 },
   stroke: { width: 0, color: '#000000' },
   glow: { blur: 0, color: '#00e5ff' },
+  shadow: { x: 0, y: 0, color: '#000000' },   // 하드 그림자 (번짐 없음). x·y 둘 다 0이면 꺼짐
 });
-const bgDefaults = () => ({ type: 'solid', color: '#000000', c1: '#1e3a8a', c2: '#9333ea', angle: 135 });
+const bgDefaults = () => ({ type: 'solid', color: '#000000', c1: '#1e3a8a', c2: '#9333ea', angle: 135, border: { width: 0, color: '#000000' } });
 function newText(content = 'TEXT') { return { id: 't' + uid++, ...textDefaults(), content }; }
 // 저장본·예전 버전 데이터에 빠진 값은 기본값으로 채움
 function normText(t) {
   const d = textDefaults();
-  return { id: t.id, ...d, ...t, fill: { ...d.fill, ...t.fill }, stroke: { ...d.stroke, ...t.stroke }, glow: { ...d.glow, ...t.glow } };
+  return { id: t.id, ...d, ...t, fill: { ...d.fill, ...t.fill }, stroke: { ...d.stroke, ...t.stroke }, glow: { ...d.glow, ...t.glow }, shadow: { ...d.shadow, ...t.shadow } };
 }
 function newDesign() {
   const t = newText();
@@ -829,6 +846,13 @@ function render(d, ctx, guides = false) {
     ctx.restore();
   }
 
+  // 2-1) 테두리: 칸 안쪽으로 굵기만큼
+  const bd = d.bg.border;
+  if (bd && bd.width > 0) {
+    ctx.lineWidth = bd.width; ctx.strokeStyle = bd.color; ctx.lineJoin = 'miter';
+    ctx.strokeRect(bd.width / 2, bd.width / 2, SIZE - bd.width, SIZE - bd.width);
+  }
+
   // 3) 텍스트
   for (const t of d.texts) {
     if (!t.content) continue;
@@ -841,6 +865,17 @@ function render(d, ctx, guides = false) {
       : t.fill.color;
     const stroked = t.stroke.width > 0;
     const lineY = (i) => L.top + L.lh * (i + 0.5);
+    // 하드 그림자: 글자(외곽선 포함)를 그림자 색으로 비껴 찍어 맨 아래에 깖
+    const sh = t.shadow;
+    if (sh && (sh.x || sh.y)) {
+      const fill = ctx.fillStyle, line = ctx.strokeStyle;
+      ctx.fillStyle = ctx.strokeStyle = sh.color;
+      L.lines.forEach((ln, i) => {
+        if (stroked) ctx.strokeText(ln, t.x + sh.x, lineY(i) + sh.y);
+        ctx.fillText(ln, t.x + sh.x, lineY(i) + sh.y);
+      });
+      ctx.fillStyle = fill; ctx.strokeStyle = line;
+    }
     // 글로우를 모든 줄에 먼저 깔고 → 그 위에 글자를 다시 그림 (아랫줄 번짐이 윗줄 글자를 덮지 않도록)
     if (t.glow.blur > 0) {
       ctx.shadowColor = t.glow.color; ctx.shadowBlur = t.glow.blur * k;   // shadowBlur는 변환 배율을 타지 않아 직접 곱함
@@ -1464,11 +1499,11 @@ $('#batchImg').addEventListener('change', (e) => {
 // 스타일 일괄 적용: 인스펙터에서 고를 수 있는 항목을 골라 대상 디자인에 복사
 const AP_TEXT = {   // 체크 항목 → 텍스트 속성
   font: ['font', 'fontStyle'], weight: ['weight'], italic: ['italic'], size: ['size'], align: ['align'],
-  lineHeight: ['lineHeight'], letterSpacing: ['letterSpacing'], fill: ['fill'], stroke: ['stroke'], glow: ['glow'],
+  lineHeight: ['lineHeight'], letterSpacing: ['letterSpacing'], fill: ['fill'], stroke: ['stroke'], glow: ['glow'], shadow: ['shadow'],
   pos: ['x', 'y'], content: ['content'],
 };
 const AP_LABEL = { font: '폰트', weight: '굵기', italic: '기울임', size: '크기', align: '정렬', lineHeight: '줄 간격', letterSpacing: '자간',
-  fill: '글자색', stroke: '외곽선', glow: '글로우', pos: '위치', content: '내용', bg: '배경', imgx: '이미지 크기·위치', img: '이미지', fit: '자동 축소' };
+  fill: '글자색', stroke: '외곽선', glow: '글로우', shadow: '하드 그림자', pos: '위치', content: '내용', bg: '배경', imgx: '이미지 크기·위치', img: '이미지', fit: '자동 축소' };
 // 일괄 적용 옵션: 기본값·저장(이 브라우저에만)·복원
 const apBoxes = $$('[data-ap]');
 function apGet() { return { checks: Object.fromEntries(apBoxes.map((el) => [el.dataset.ap, el.checked])), layers: $('#applyLayers').value, target: $('#applyTarget').value }; }
@@ -1687,10 +1722,21 @@ $('#setLoad').addEventListener('click', () => $('#setFile').click());
 $('#setFile').addEventListener('change', (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) loadSet(f); });
 
 // ───────── 스타일 프리셋 (이 브라우저에 저장 + 세트 파일에 함께 담김) ─────────
-const PRESET_GROUPS = ['font', 'weight', 'italic', 'size', 'align', 'lineHeight', 'letterSpacing', 'fill', 'stroke', 'glow'];
+const PRESET_GROUPS = ['font', 'weight', 'italic', 'size', 'align', 'lineHeight', 'letterSpacing', 'fill', 'stroke', 'glow', 'shadow'];
 let presets = [];   // [{ name, text: 텍스트 스타일, bg: 배경 }]
 const savePresets = () => DB.put('kv', 'presets', presets).catch(() => {});
 const styleOf = (t) => Object.fromEntries(PRESET_GROUPS.flatMap((g) => AP_TEXT[g]).map((k) => [k, structuredClone(t[k])]));
+// 기본 제공 프리셋: 지울 수 없고 브라우저·세트 파일에 저장하지 않음. 크기·정렬·간격·폰트는 그대로 두고 굵기·색·효과·배경만 바꿈
+const BUILTIN_GROUPS = ['weight', 'fill', 'stroke', 'glow', 'shadow'];
+const BUILTIN_PRESETS = [
+  { name: '기본', builtin: true, groups: BUILTIN_GROUPS,
+    text: styleOf(normText({ weight: 700, fill: { type: 'solid', color: '#ffffff' }, stroke: { width: 0 }, glow: { blur: 0 }, shadow: { x: 0, y: 0 } })),
+    bg: { ...bgDefaults(), type: 'solid', color: '#000000' } },
+  // 네오브루탈리즘: 쨍한 단색 배경 + 굵은 검정 테두리 + 흰 글자·검정 외곽선·번짐 없는 오프셋 그림자
+  { name: '브루탈리즘', builtin: true, groups: BUILTIN_GROUPS,
+    text: styleOf(normText({ weight: 900, fill: { type: 'solid', color: '#ffffff' }, stroke: { width: 3, color: '#0b0b0b' }, glow: { blur: 0 }, shadow: { x: 6, y: 6, color: '#0b0b0b' } })),
+    bg: { ...bgDefaults(), type: 'solid', color: '#c6ff00', border: { width: 10, color: '#0b0b0b' } } },
+];
 // 같은 이름은 덮어씀. 파일에서 온 값은 기본값으로 빈칸을 채워 정리
 function mergePresets(items) {
   if (!Array.isArray(items)) return;
@@ -1704,7 +1750,7 @@ function mergePresets(items) {
 }
 function renderPresets() {
   const box = $('#presetList'); box.textContent = '';
-  presets.forEach((p, i) => {
+  [...BUILTIN_PRESETS, ...presets].forEach((p) => {
     const row = document.createElement('div'); row.className = 'row';
     const pv = document.createElement('span'); pv.className = 'pv'; pv.textContent = 'Aa';
     pv.style.background = p.bg.type === 'gradient' ? `linear-gradient(${p.bg.angle + 90}deg, ${p.bg.c1}, ${p.bg.c2})` : p.bg.color;
@@ -1713,9 +1759,15 @@ function renderPresets() {
     const nm = document.createElement('span'); nm.className = 'grow'; nm.textContent = p.name; nm.title = p.name;
     const ap = document.createElement('button'); ap.textContent = '적용';
     ap.addEventListener('click', () => applyPreset(p));
-    const del = document.createElement('button'); del.className = 'ghost danger'; del.textContent = '삭제';
-    del.addEventListener('click', () => { presets.splice(i, 1); savePresets(); renderPresets(); });
-    row.append(pv, nm, ap, del); box.append(row);
+    if (p.builtin) {
+      const tag = document.createElement('span'); tag.className = 'hint'; tag.textContent = '기본 제공';
+      row.append(pv, nm, ap, tag);
+    } else {
+      const del = document.createElement('button'); del.className = 'ghost danger'; del.textContent = '삭제';
+      del.addEventListener('click', () => { presets.splice(presets.indexOf(p), 1); savePresets(); renderPresets(); });
+      row.append(pv, nm, ap, del);
+    }
+    box.append(row);
   });
 }
 // 지금 디자인 + 체크한 디자인에 적용. 텍스트는 지금 선택한 텍스트와 같은 순서의 레이어에 넣음
@@ -1726,7 +1778,7 @@ function applyPreset(p) {
   for (const d of targets) {
     d.bg = structuredClone(p.bg);
     const t = d.texts[idx] || d.texts[0];
-    if (t) copyText(t, s, PRESET_GROUPS);
+    if (t) copyText(t, s, p.groups || PRESET_GROUPS);
   }
   setDlg.close(); refreshAll();
   for (const d of targets) for (const t of d.texts) loadFontFor(t);
@@ -1736,6 +1788,7 @@ $('#presetSave').addEventListener('click', () => {
   const t = selText() || cur().texts[0];
   if (!t) return toast('스타일을 가져올 텍스트가 없습니다. 텍스트를 먼저 추가하세요.');
   const name = $('#presetName').value.trim() || `프리셋 ${presets.length + 1}`;
+  if (BUILTIN_PRESETS.some((b) => b.name === name)) return toast(`"${name}"는 기본 제공 프리셋 이름입니다. 다른 이름을 쓰세요.`);
   mergePresets([{ name, text: styleOf(t), bg: structuredClone(cur().bg) }]);
   $('#presetName').value = '';
   toast(`프리셋 "${name}"를 저장했습니다.`);
