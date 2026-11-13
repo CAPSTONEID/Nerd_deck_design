@@ -664,6 +664,7 @@
           </label>
           <label class="f">글자 크기<span class="count" id="fdSizeVal"></span><input id="fdSize" type="range" min="32" max="96" step="2" value="58"></label>
           <label class="f">글자 세로 위치 (− 위 · + 아래)<span class="count" id="fdYVal"></span><input id="fdY" type="range" min="-160" max="60" step="2" value="0"></label>
+          <label class="f">이름 ↔ 보조 글 간격 (− 좁게 · + 넓게)<span class="count" id="fdGapVal"></span><input id="fdGap" type="range" min="-40" max="80" step="2" value="0"></label>
           <label class="f">보조 글 (비우면 안 보임)<input id="fdSub" type="text" placeholder="예: Wed 19 Aug"></label>
           <label class="check"><input id="fdPlus" type="checkbox" checked> ＋ 버튼 표시</label>
         </div>
@@ -1924,7 +1925,7 @@ function fdDefaultArt(c1, c2, c3) {
 function fdOpts() {
   return { style: $('input[name=fdStyle]:checked').value, name: $('#fdName').value, sub: $('#fdSub').value, plus: $('#fdPlus').checked,
     fill: $('input[name=fdFill]:checked').value, solid: $('#fdSolid').value,
-    font: $('#fdFont').value || '', weight: +$('#fdWeight').value, size: +$('#fdSize').value, y: +$('#fdY').value,
+    font: $('#fdFont').value || '', weight: +$('#fdWeight').value, size: +$('#fdSize').value, y: +$('#fdY').value, gap: +$('#fdGap').value,
     c1: $('#fdC1').value, c2: $('#fdC2').value, c3: $('#fdC3').value, blur: +$('#fdBlur').value };
 }
 // 뒤판 그림: 이미지(올린 게 없으면 그라디언트로 대신) · 단색 · 그라디언트
@@ -1968,7 +1969,8 @@ function renderFolder(ctx, o) {
   // 3) 글자: 두 스타일 모두 앞판 왼쪽 아래 (보조 글은 이름 아래)
   ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
   // 세로 위치는 슬라이더(o.y)로 조절. 보조 글이 앞판 아래 가장자리(863)를 넘지 않게 막음
-  const gap = Math.round((o.size || 58) * 0.5) + 42;
+  // 기본 간격 + 슬라이더(o.gap). 가장 좁혀도 이름 아래 끝과 보조 글이 겹치지 않게 하한을 둠
+  const gap = Math.max(Math.round((o.size || 58) * 0.35) + 26, Math.round((o.size || 58) * 0.5) + 42 + (o.gap || 0));
   let ny = (o.sub ? 744 : 790) + (o.y || 0);
   ny = Math.min(ny, o.sub ? 840 - gap : 840);
   const maxW = o.plus ? 560 : 740;
@@ -1995,6 +1997,7 @@ function drawFolderPreview() {
   $('#fdBlurVal').textContent = o.blur;
   $('#fdSizeVal').textContent = o.size + 'px';
   $('#fdYVal').textContent = (o.y > 0 ? '+' : '') + o.y;
+  $('#fdGapVal').textContent = (o.gap > 0 ? '+' : '') + o.gap;
   $('#fdImgState').textContent = FD.img ? '올린 이미지 사용 중' : '올린 이미지가 없어 그라디언트로 보여 줍니다';
   for (const el of $$('[data-fd]')) el.hidden = el.dataset.fd !== o.fill;
   renderFolder(fctx, o);
@@ -2011,6 +2014,7 @@ try {
     if (Number.isFinite(o.blur)) $('#fdBlur').value = o.blur;
     if (Number.isFinite(o.size)) $('#fdSize').value = o.size;
     if (Number.isFinite(o.y)) $('#fdY').value = o.y;
+    if (Number.isFinite(o.gap)) $('#fdGap').value = o.gap;
     if ([...$('#fdWeight').options].some((x) => +x.value === o.weight)) $('#fdWeight').value = o.weight;
     FD.font = typeof o.font === 'string' ? o.font : '';
   }
