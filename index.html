@@ -350,8 +350,21 @@
       <div data-panel="batch" hidden>
         <div class="group">
           <h3>스타일 일괄 적용</h3>
-          <button id="applyStyle" class="wide primary">현재 스타일 → 체크한 디자인에 적용</button>
-          <p class="hint">배경과 첫 번째 텍스트의 폰트·크기·색·위치를 복사합니다. 텍스트 내용과 이미지는 그대로 둡니다. 왼쪽 목록에서 썸네일 체크박스로 대상을 고르세요.</p>
+          <div class="stack">
+            <label class="row"><input type="checkbox" data-ap="font" checked> 폰트 (패밀리·굵기·기울임·자간·줄 간격)</label>
+            <label class="row"><input type="checkbox" data-ap="size" checked> 폰트 크기</label>
+            <label class="row"><input type="checkbox" data-ap="color" checked> 색상 (채우기·외곽선)</label>
+            <label class="row"><input type="checkbox" data-ap="pos" checked> 위치 (X·Y·정렬)</label>
+            <label class="row"><input type="checkbox" data-ap="bg" checked> 배경</label>
+          </div>
+          <label class="f">적용 대상
+            <select id="applyTarget">
+              <option value="checked">왼쪽에서 체크한 디자인</option>
+              <option value="all">전체 디자인</option>
+            </select>
+          </label>
+          <button id="applyStyle" class="wide primary">현재 디자인 → 대상에 적용</button>
+          <p class="hint">지금 선택한 텍스트(없으면 첫 번째 텍스트)의 값을 대상 디자인의 첫 번째 텍스트에 복사합니다. 체크한 항목만 바뀌고 텍스트 내용·이미지는 그대로입니다. 텍스트가 없는 디자인은 파일 이름을 글자로 새로 만듭니다.</p>
         </div>
       </div>
     </div>
@@ -979,17 +992,27 @@ $('#bulkGo').addEventListener('click', () => {
   select(S.cur + 1);
 });
 
-// 스타일 일괄 적용
+// 스타일 일괄 적용: 체크한 항목만 대상 디자인의 첫 번째 텍스트로 복사
+const APPLY_KEYS = {
+  font: ['font', 'fontStyle', 'weight', 'italic', 'lineHeight', 'letterSpacing'],
+  size: ['size'],
+  color: ['fill', 'stroke'],
+  pos: ['x', 'y', 'align'],   // x는 정렬 기준점이라 align과 함께 옮김
+};
 $('#applyStyle').addEventListener('click', () => {
-  const src = cur(), st = src.texts[0];
-  const targets = S.designs.filter((d) => d.checked && d !== src);
-  if (!targets.length) return toast('왼쪽 목록에서 적용할 디자인을 체크하세요.');
+  const src = cur(), st = selText() || src.texts[0];
+  const on = new Set($$('[data-ap]:checked').map((el) => el.dataset.ap));
+  if (!on.size) return toast('적용할 항목을 하나 이상 체크하세요.');
+  const keys = Object.keys(APPLY_KEYS).filter((g) => on.has(g)).flatMap((g) => APPLY_KEYS[g]);
+  if (keys.length && !st) return toast('기준 디자인에 텍스트가 없습니다. 텍스트를 먼저 추가하세요.');
+  const pool = $('#applyTarget').value === 'all' ? S.designs : S.designs.filter((d) => d.checked);
+  const targets = pool.filter((d) => d !== src);
+  if (!targets.length) return toast('적용할 디자인이 없습니다. 왼쪽 목록에서 체크하거나 대상을 "전체"로 바꾸세요.');
   for (const d of targets) {
-    d.bg = JSON.parse(JSON.stringify(src.bg));
-    if (!st) continue;
-    if (!d.texts.length) { const t = newText(); d.texts.push(t); d.sel = t.id; }
-    const { id, content, ...style } = JSON.parse(JSON.stringify(st));
-    Object.assign(d.texts[0], style);
+    if (on.has('bg')) d.bg = structuredClone(src.bg);
+    if (!keys.length) continue;
+    if (!d.texts.length) { const t = newText(d.name); d.texts.push(t); d.sel = t.id; }
+    for (const k of keys) d.texts[0][k] = structuredClone(st[k]);
   }
   toast(`${targets.length}개 디자인에 적용했습니다.`);
   refreshAll();
