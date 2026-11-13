@@ -97,10 +97,18 @@
   .badge { font: 800 12px var(--mono); margin-left: 6px; background: var(--ink); color: var(--accent); padding: 0 6px; }
 
   /* 프레임: 피그마 프레임처럼 이름표 + 화면. 한 줄 10개씩, 넘치면 다음 줄로 (안에서 스크롤하지 않고 영역이 커짐) */
-  .frames-head { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; padding: 12px 16px 10px; background: var(--card); border-bottom: var(--bd-3); }
+  .frames-head { position: sticky; top: 0; z-index: 12; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; padding: 12px 16px 10px; background: var(--card); border-bottom: var(--bd-3); }
+  .frames-head .fold { padding: 5px 9px; min-width: 64px; }
+  .frames-head .pin { width: 32px; height: 30px; padding: 0; display: grid; place-items: center; margin-right: 6px; }
+  .frames-head .pin svg { width: 15px; height: 15px; }
+  .frames-head .pin[aria-pressed=true], .frames-head .pin[aria-pressed=true]:hover:not(:disabled) { background: var(--ink); color: var(--accent); transform: translate(3px, 3px); box-shadow: none; }
+  .cur-chip { font-size: 12px; font-weight: 700; padding: 2px 8px; border: var(--bd); background: var(--ink); color: var(--accent); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 6px; }
+  /* 접힘: 프레임·안내 숨김. 펼쳐 보기(핀 없음): 편집 화면 위에 겹쳐 띄움 (배치를 밀어내지 않음) */
+  .stage[data-frames=collapsed] #list, .stage:not([data-frames=pinned]) .legend { display: none; }   /* 안내는 핀 고정일 때만 (펼쳐 볼 때 편집 화면이 움직이지 않도록) */
+  .stage[data-frames=peek] #list { position: fixed; z-index: 25; max-height: min(62vh, 560px); overflow-y: auto; border: var(--bd-3); border-top: 0; box-shadow: var(--sh-lg); }
   .frames-head h2 { font-size: 14px; font-weight: 900; margin: 0 10px 0 0; text-transform: uppercase; }
   .frames-head button { padding: 5px 10px; font-size: 12px; }
-  .frames-head > button:not(.ghost) { margin-left: 6px; }
+  .head-right { display: flex; align-items: center; gap: 6px; margin-left: auto; }   /* 오른쪽 버튼은 한 덩어리로 줄바꿈 */
   .selbar { display: flex; align-items: center; gap: 2px; margin-left: 8px; padding: 2px 4px 2px 10px; background: var(--accent); border: var(--bd); font-size: 12px; }
   .selbar span { margin-right: 4px; font-weight: 800; white-space: nowrap; }
   .selbar button { padding: 3px 8px; }
@@ -114,8 +122,8 @@
   .tile .nm b { font: 700 10px/1.7 var(--mono); color: var(--faint); }
   .tile .nm span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .tile .thumb { position: relative; }
-  .tile canvas { width: 100%; aspect-ratio: 1; display: block; background: #000; border: var(--bd); box-shadow: var(--sh-sm); transition: transform .08s, box-shadow .08s; }
-  .tile:hover canvas { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ink); }
+  .tile canvas { width: 100%; aspect-ratio: 1; display: block; background: #000; border: var(--bd); }
+  .tile:hover canvas { outline: 2px dashed var(--ink); outline-offset: 2px; }
   .tile.on .nm { color: var(--ink); }
   .tile.on .nm span { background: var(--ink); color: var(--accent); padding: 0 4px; }
   .tile.on canvas { border-color: var(--ink); box-shadow: 4px 4px 0 var(--accent), 4px 4px 0 2px var(--ink); outline: 3px solid var(--accent); outline-offset: -5px; }
@@ -131,9 +139,9 @@
   .stage-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; }
   #editor { width: min(100cqw, calc(100cqh - 96px), 640px);   /* 작업대 남은 칸(정렬 바·안내 문구 제외)에 꽉 맞는 정사각형 */
     aspect-ratio: 1; cursor: grab; touch-action: none;
-    background: repeating-conic-gradient(#d9d4c6 0 25%, #f4f1e8 0 50%) 0 0 / 20px 20px; border: var(--bd-3); box-shadow: var(--sh-lg); }
+    background: repeating-conic-gradient(#d9d4c6 0 25%, #f4f1e8 0 50%) 0 0 / 20px 20px; outline: 2px solid var(--ink); outline-offset: 5px; }
   #editor:active { cursor: grabbing; }
-  body.dropping #editor { outline: 5px solid var(--pink); outline-offset: 4px; }
+  body.dropping #editor { outline: 4px solid var(--pink); outline-offset: 5px; }
   .align-bar { display: flex; align-items: center; gap: 2px; padding: 3px; background: var(--card); border: var(--bd); box-shadow: var(--sh-sm); }
   .align-bar button { width: 34px; height: 30px; padding: 0; display: grid; place-items: center; background: transparent; border: 0; box-shadow: none; }
   .align-bar button:hover:not(:disabled) { transform: none; box-shadow: none; background: var(--accent); }
@@ -251,11 +259,12 @@
       <b><kbd>⌘/Ctrl</kbd> <kbd>S</kbd></b><span>현재 PNG 저장</span>
       <b><kbd>⌘/Ctrl</kbd> <kbd>V</kbd></b><span>클립보드 이미지 붙여넣기</span>
       <b>PageUp · Down</b><span>이전 · 다음 디자인</span>
+      <b>프레임 접기·핀</b><span>▲/▼ = 접기·펴기, 핀 = 항상 펼쳐 둠. 핀을 풀면 펼쳤다가 벗어날 때 자동으로 접힘 (<kbd>Esc</kbd> = 접기)</span>
       <b>프레임</b><span>끌어서 순서 변경 · 체크 = ZIP·일괄 적용 대상 (<kbd>Shift</kbd>+클릭 = 범위)</span>
       <b>파일 끌어다 놓기</b><span>이미지 1장 = 현재 디자인, 여러 장 = 장당 1개, 폰트 파일 = 폰트 추가</span>
     </div>
   </details>
-  <button id="resetAll" class="ghost" title="모든 디자인을 지우고 새로 시작 (실행 취소 가능)">초기화</button>
+  <button id="resetAll" class="ghost danger" title="모든 디자인을 지우고 새로 시작 (실행 취소 가능)">전체 삭제</button>
   <span class="vsep"></span>
   <button id="dlSel">선택 ZIP (0)</button>
   <button id="dlAll">전체 ZIP</button>
@@ -264,9 +273,12 @@
 
 <main class="shell">
   <!-- 가운데: 프레임 줄(디자인 목록) + 편집 캔버스 -->
-  <section class="stage">
+  <section class="stage" data-frames="pinned">
     <div class="frames-head">
       <h2>디자인<span id="countBadge" class="badge"></span></h2>
+      <button id="framesToggle" class="fold" aria-expanded="true" title="프레임 접기">▲ 접기</button>
+      <button id="framesPin" class="pin" aria-pressed="true" title="핀 해제 (프레임에서 벗어나면 자동으로 접힘)" aria-label="프레임 핀 고정"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6 1.5h4l-.6 4.2 2.6 2.6v1.2H4v-1.2l2.6-2.6L6 1.5zM8 9.5V15"/></svg></button>
+      <span id="curChip" class="cur-chip" hidden></span>
       <button id="dupDesign" class="ghost" title="복제 (⌘/Ctrl+D)">복제</button>
       <button id="moveUp" class="ghost" title="앞으로">←</button>
       <button id="moveDown" class="ghost" title="뒤로">→</button>
@@ -276,10 +288,11 @@
         <button id="checkNone" class="ghost">해제</button>
         <button id="delChecked" class="ghost danger">체크한 것 삭제</button>
       </div>
-      <span class="spacer"></span>
-      <button id="checkAll" class="ghost" title="ZIP 저장·일괄 적용 대상으로 전부 체크">전체 체크</button>
-      <button id="bulkOpen" title="글이나 이미지 여러 개로 한 번에 만들기">일괄 생성</button>
-      <button id="addDesign" class="primary" title="새 디자인">+ 새로</button>
+      <span class="head-right">
+        <button id="checkAll" class="ghost" title="ZIP 저장·일괄 적용 대상으로 전부 체크">전체 체크</button>
+        <button id="bulkOpen" title="글이나 이미지 여러 개로 한 번에 만들기">일괄 생성</button>
+        <button id="addDesign" class="primary" title="새 디자인">+ 새로</button>
+      </span>
       <p class="legend"><b class="sel">클릭</b> = 지금 편집할 디자인 1개 (캔버스·오른쪽 설정에 표시, 일괄 적용의 기준) <b class="chk">☑ 체크</b> = 여러 개를 묶어 처리할 대상 (선택 ZIP 저장 · 일괄 적용 · 체크한 것 삭제)</p>
     </div>
     <div id="list" class="frames" title="한 줄 10개 · 클릭 = 선택 · 끌기 = 순서 변경 · 체크 = ZIP 저장·일괄 적용 대상 (Shift+클릭 = 범위)"></div>
@@ -504,7 +517,7 @@
           <div class="ap-actions">
             <button id="apAll">모두 체크</button>
             <button id="apNone">모두 해제</button>
-            <button id="apReset" title="체크 항목·적용할 레이어·적용 대상을 처음 상태로">옵션 초기화</button>
+            <button id="apReset" class="danger" title="체크한 항목을 기본 스타일로 되돌림 (지금 디자인 + 적용 대상, 내용·이미지는 그대로)">스타일 초기화</button>
           </div>
           <label class="f">적용 대상
             <select id="applyTarget">
@@ -514,7 +527,7 @@
           </label>
           <button id="applyStyle" class="wide primary">현재 디자인 → 대상에 적용</button>
           <p id="apSummary" class="hint"></p>
-          <p class="hint">기준은 지금 디자인(선택한 텍스트)입니다. 체크한 항목만 바뀝니다. 텍스트가 없는 디자인에는 파일 이름으로 텍스트를 새로 만듭니다. ⌘/Ctrl+Z로 되돌릴 수 있습니다.</p>
+          <p class="hint"><b>적용</b>: 지금 디자인(선택한 텍스트)의 값을 대상에 복사합니다. <b>스타일 초기화</b>: 체크한 항목을 지금 디자인과 대상 모두 기본값으로 되돌립니다(내용·이미지 파일은 그대로). 체크한 항목만 바뀝니다. 텍스트가 없는 디자인에는 파일 이름으로 텍스트를 새로 만듭니다. ⌘/Ctrl+Z로 되돌릴 수 있습니다.</p>
         </div>
       </div>
     </div>
@@ -644,7 +657,10 @@ function commit() {
   clearTimeout(H.timer); H.timer = 0;
   if (!S.designs.length) return;
   const json = JSON.stringify(S.designs, strip);
-  if (H.i >= 0 && H.stack[H.i].json === json) { H.stack[H.i].cur = S.cur; return; }
+  if (H.i >= 0 && H.stack[H.i].json === json) {   // 내용은 그대로 = 선택만 바뀜 → 실행 취소 단계는 안 늘리고 선택만 저장
+    if (H.stack[H.i].cur !== S.cur) { H.stack[H.i].cur = S.cur; save(json); }
+    return;
+  }
   H.stack.length = H.i + 1;
   H.stack.push({ json, cur: S.cur });
   if (H.stack.length > 100) H.stack.shift();
@@ -824,7 +840,7 @@ function rebuildList() {
     nm.append(no, tx);
     const th = document.createElement('div'); th.className = 'thumb'; th.append(cv, cb);
     row.append(nm, th);   // 피그마 프레임처럼 이름표가 위
-    row.addEventListener('click', () => select(i));
+    row.addEventListener('click', () => { select(i); if (FR.mode === 'peek') setFrames('collapsed'); });
     row.addEventListener('dragstart', (e) => { dragFrom = i; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', d.name); });
     row.addEventListener('dragend', () => { dragFrom = null; });
     row.addEventListener('dragover', (e) => { if (dragFrom === null) return; e.preventDefault(); row.classList.toggle('drop', dragFrom !== i); });
@@ -873,6 +889,7 @@ function changed(full = false) {
     const d = cur();
     render(d, ectx, true);
     const th = thumbs.get(d.id); if (th) render(d, th.getContext('2d'));
+    $('#curChip').textContent = `편집 중: ${S.cur + 1}. ${d.name || '이름 없음'}`;
   });
 }
 const refreshAll = () => { syncPanel(); changed(true); };
@@ -1386,7 +1403,6 @@ const AP_LABEL = { font: '폰트', weight: '굵기', italic: '기울임', size: 
   fill: '글자색', stroke: '외곽선', glow: '글로우', pos: '위치', content: '내용', bg: '배경', imgx: '이미지 크기·위치', img: '이미지', fit: '자동 축소' };
 // 일괄 적용 옵션: 기본값·저장(이 브라우저에만)·복원
 const apBoxes = $$('[data-ap]');
-const AP_DEFAULT = { checks: Object.fromEntries(apBoxes.map((el) => [el.dataset.ap, el.defaultChecked])), layers: 'first', target: 'checked' };
 function apGet() { return { checks: Object.fromEntries(apBoxes.map((el) => [el.dataset.ap, el.checked])), layers: $('#applyLayers').value, target: $('#applyTarget').value }; }
 function apSet(o) {
   apBoxes.forEach((el) => { if (el.dataset.ap in o.checks) el.checked = !!o.checks[el.dataset.ap]; });
@@ -1403,8 +1419,23 @@ function apSync() {
 for (const el of [...apBoxes, $('#applyLayers'), $('#applyTarget')]) el.addEventListener('change', apSync);
 $('#apAll').addEventListener('click', () => { apBoxes.forEach((el) => (el.checked = true)); apSync(); });
 $('#apNone').addEventListener('click', () => { apBoxes.forEach((el) => (el.checked = false)); apSync(); });
-$('#apReset').addEventListener('click', () => { apSet(AP_DEFAULT); toast('일괄 적용 옵션을 처음 상태로 되돌렸습니다.'); });
 try { const saved = JSON.parse(localStorage.getItem('ct-apply-options') || 'null'); if (saved && saved.checks) apSet(saved); else apSync(); } catch { apSync(); }
+
+// 스타일 초기화: 체크한 항목을 기본값으로 (지금 디자인 + 적용 대상). 내용·이미지 파일·자동 축소는 건드리지 않음
+$('#apReset').addEventListener('click', () => {
+  const on = new Set(apBoxes.filter((el) => el.checked).map((el) => el.dataset.ap));
+  const groups = Object.keys(AP_TEXT).filter((g) => on.has(g) && g !== 'content'), mode = $('#applyLayers').value;
+  if (!groups.length && !on.has('bg') && !on.has('imgx')) return toast('초기화할 스타일 항목(텍스트·배경·이미지 크롭)을 체크하세요.');
+  const pool = $('#applyTarget').value === 'all' ? S.designs : S.designs.filter((d) => d.checked);
+  const targets = [...new Set([cur(), ...pool])], def = textDefaults();
+  for (const d of targets) {
+    if (on.has('bg')) d.bg = bgDefaults();
+    if (on.has('imgx') && d.image) fitImage(d.image, 'cover');
+    (mode === 'first' ? d.texts.slice(0, 1) : d.texts).forEach((t) => copyText(t, def, groups));
+  }
+  toast(`${targets.length}개 디자인의 스타일을 초기화했습니다. ⌘/Ctrl+Z로 되돌릴 수 있습니다.`);
+  refreshAll();
+});
 
 // 이미지가 300×300을 꽉 채우는 배율 (크기가 다른 이미지끼리 크롭 비율을 맞추는 기준)
 const coverScale = (im) => Math.max(SIZE / im.el.naturalWidth, SIZE / im.el.naturalHeight);
@@ -1550,6 +1581,39 @@ document.addEventListener('keydown', (e) => {
 });
 // 도움말은 바깥을 누르면 닫힘
 document.addEventListener('click', (e) => { const h = $('.help'); if (h.open && !h.contains(e.target)) h.open = false; });
+
+// ───────── 프레임 접기 · 펴기 · 핀 고정 ─────────
+// pinned = 항상 펼침(배치 안), collapsed = 접힘, peek = 핀 없이 잠깐 펼침(편집 화면 위에 겹침, 벗어나면 접힘)
+const stageEl = $('.stage'), framesHead = $('.frames-head');
+const FR = { mode: 'pinned', timer: 0 };
+function placePeek() {   // 겹쳐 띄운 프레임을 머리줄 바로 아래, 작업대 폭에 맞춤
+  const h = framesHead.getBoundingClientRect(), st = stageEl.getBoundingClientRect();
+  list.style.top = h.bottom + 'px'; list.style.left = st.left + stageEl.clientLeft + 'px'; list.style.width = stageEl.clientWidth + 'px';
+}
+function setFrames(mode) {
+  clearTimeout(FR.timer);
+  FR.mode = mode; stageEl.dataset.frames = mode;
+  const open = mode !== 'collapsed';
+  $('#framesToggle').textContent = open ? '▲ 접기' : '▼ 펴기';
+  $('#framesToggle').setAttribute('aria-expanded', open);
+  $('#framesToggle').title = open ? '프레임 접기' : '프레임 펴기 (핀을 꽂지 않으면 벗어날 때 자동으로 접힘)';
+  $('#framesPin').setAttribute('aria-pressed', mode === 'pinned');
+  $('#framesPin').title = mode === 'pinned' ? '핀 해제 (프레임에서 벗어나면 자동으로 접힘)' : '핀 고정 (항상 펼쳐 둠)';
+  $('#curChip').hidden = mode !== 'collapsed';
+  if (mode === 'peek') placePeek(); else list.style.top = list.style.left = list.style.width = '';
+  try { localStorage.setItem('ct-frames', mode === 'pinned' ? 'pinned' : 'collapsed'); } catch { /* 이번 세션만 */ }
+}
+$('#framesToggle').addEventListener('click', () => setFrames(FR.mode === 'collapsed' ? 'peek' : 'collapsed'));
+$('#framesPin').addEventListener('click', () => setFrames(FR.mode === 'pinned' ? 'peek' : 'pinned'));
+// 펼쳐 보기: 프레임·머리줄에서 벗어나면 잠시 뒤 접힘, 다시 들어오면 취소
+const leaveSoon = () => { if (FR.mode === 'peek') { clearTimeout(FR.timer); FR.timer = setTimeout(() => setFrames('collapsed'), 450); } };
+const stay = () => clearTimeout(FR.timer);
+for (const el of [list, framesHead]) { el.addEventListener('pointerleave', leaveSoon); el.addEventListener('pointerenter', stay); }
+document.addEventListener('pointerdown', (e) => { if (FR.mode === 'peek' && !list.contains(e.target) && !framesHead.contains(e.target)) setFrames('collapsed'); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && FR.mode === 'peek' && !bulkDlg.open) setFrames('collapsed'); });
+window.addEventListener('resize', () => { if (FR.mode === 'peek') placePeek(); });
+stageEl.addEventListener('scroll', () => { if (FR.mode === 'peek') placePeek(); });
+try { if (localStorage.getItem('ct-frames') === 'collapsed') setFrames('collapsed'); } catch { /* 기본 = 핀 고정 */ }
 
 // ───────── 시작: 저장본 복원 ─────────
 async function restore() {
