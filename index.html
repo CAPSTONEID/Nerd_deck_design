@@ -177,8 +177,17 @@
       <div class="stack">
         <button id="batchImgBtn" class="wide">이미지 여러 장 → 장당 1개</button>
         <input id="batchImg" type="file" accept="image/*" multiple hidden>
-        <textarea id="bulkText" rows="3" placeholder="한 줄 = 디자인 1개&#10;녹화 시작&#10;장면 전환"></textarea>
-        <button id="bulkGo" class="wide">줄마다 디자인 만들기</button>
+        <textarea id="bulkText" rows="4" placeholder="녹화 시작&#10;장면 전환"></textarea>
+        <label class="f">나누는 기준
+          <select id="bulkMode">
+            <option value="line">줄마다 1장</option>
+            <option value="one">전체를 1장 (줄바꿈 유지)</option>
+            <option value="blank">빈 줄마다 1장 (묶음 안 줄바꿈 유지)</option>
+            <option value="custom">구분 기호마다 1장</option>
+          </select>
+        </label>
+        <input id="bulkSep" type="text" value="---" placeholder="구분 기호 (예: --- 또는 |)" aria-label="구분 기호" hidden>
+        <button id="bulkGo" class="wide">디자인 만들기</button>
         <p class="hint">이미지는 배경만, 텍스트는 배경·글자 스타일까지 지금 디자인을 복사합니다.</p>
       </div>
     </details>
@@ -975,20 +984,24 @@ $('#batchImg').addEventListener('change', async (e) => {
   select(S.cur + 1);
 });
 
-// 텍스트 일괄 생성
+// 텍스트 일괄 생성: 나누는 기준에 따라 글 묶음 → 디자인 1개씩 (묶음 안 줄바꿈은 그대로 한 이미지에 들어감)
+$('#bulkMode').addEventListener('change', () => { $('#bulkSep').hidden = $('#bulkMode').value !== 'custom'; });
 $('#bulkGo').addEventListener('click', () => {
-  const lines = $('#bulkText').value.split('\n').map((s) => s.trim()).filter(Boolean);
-  if (!lines.length) return toast('텍스트를 한 줄 이상 입력하세요.');
+  const raw = $('#bulkText').value.replace(/\r\n?/g, '\n'), mode = $('#bulkMode').value, sep = $('#bulkSep').value;
+  if (mode === 'custom' && !sep) return toast('구분 기호를 입력하세요.');
+  const blocks = (mode === 'one' ? [raw] : mode === 'blank' ? raw.split(/\n[ \t]*\n/) : mode === 'custom' ? raw.split(sep) : raw.split('\n'))
+    .map((b) => b.trim()).filter(Boolean);
+  if (!blocks.length) return toast('텍스트를 입력하세요.');
   const tpl = cur(); let at = S.cur + 1;
-  for (const line of lines) {
+  for (const text of blocks) {
     const c = cloneDesign(tpl);
     if (!c.texts.length) { const t = newText(); c.texts.push(t); c.sel = t.id; }
     const t = c.texts.find((x) => x.id === c.sel) || c.texts[0];
-    t.content = line; c.name = line;
+    t.content = text; c.name = text.replace(/\s*\n\s*/g, ' ').slice(0, 60);   // 파일 이름은 줄바꿈을 공백으로
     S.designs.splice(at++, 0, c);
   }
   $('#bulkText').value = '';
-  toast(`${lines.length}개 디자인을 만들었습니다.`);
+  toast(`${blocks.length}개 디자인을 만들었습니다.`);
   select(S.cur + 1);
 });
 
