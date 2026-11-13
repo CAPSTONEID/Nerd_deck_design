@@ -241,6 +241,15 @@
   .mv-grid[data-shape="round"] canvas { border-radius: 14%; }
   .mv-item span { font: 700 11px var(--mono); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .mv-grid[data-names="off"] .mv-item span { display: none; }
+  /* 폴더 아이콘 만들기 */
+  #folderDlg { width: min(1040px, calc(100vw - 32px)); max-width: none; }
+  .fd-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 18px; align-items: start; }
+  @media (max-width: 760px) { .fd-wrap { grid-template-columns: 1fr; } }
+  #folderCanvas { width: 100%; max-width: min(100%, calc(min(74vh, 640px) - 44px)); justify-self: center; aspect-ratio: 1; display: block; border: var(--bd);
+    background: #f1f1f1 radial-gradient(circle, #cfcfcf 1.5px, transparent 1.6px) 0 0 / 22px 22px; }
+  #folderDlg[data-preview="dark"] #folderCanvas { background-color: #1b1b1d; background-image: radial-gradient(circle, #333 1.5px, transparent 1.6px); }
+  .fd-side { display: flex; flex-direction: column; gap: 12px; }
+  .fd-colors { display: flex; gap: 8px; }
 
   .toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%); background: var(--ink); color: var(--accent); font-weight: 700;
     padding: 10px 18px; border: var(--bd); box-shadow: 5px 5px 0 var(--accent); z-index: 30; max-width: calc(100vw - 32px); }
@@ -286,6 +295,7 @@
       <b>파일 끌어다 놓기</b><span>이미지 1장 = 현재 디자인, 여러 장 = 장당 1개, 폰트 파일 = 폰트 추가</span>
     </div>
   </details>
+  <button id="folderOpen" title="맥 Finder용 유리 질감 폴더 아이콘 (1024×1024 투명 PNG)">폴더 아이콘</button>
   <button id="mvOpen" title="체크한 디자인(없으면 전체)을 한 화면에 크게 모아 보기">멀티뷰</button>
   <button id="setOpen" title="세트 파일 저장·불러오기, 스타일 프리셋">세트 · 프리셋</button>
   <button id="resetAll" class="ghost danger" title="모든 디자인을 지우고 새로 시작 (실행 취소 가능)">전체 삭제</button>
@@ -627,6 +637,43 @@
       <div class="row"><input id="presetName" class="grow" type="text" placeholder="프리셋 이름"><button id="presetSave">현재 스타일 저장</button></div>
       <div id="presetList" class="preset-list"></div>
       <p class="hint">선택한 텍스트의 폰트·굵기·기울임·크기·정렬·줄 간격·자간·글자색·외곽선·글로우·하드 그림자와 배경(테두리 포함)을 저장합니다. 적용하면 지금 디자인과 프레임 줄에서 체크한 디자인에 들어갑니다(내용·위치·이미지는 그대로). 같은 이름으로 저장하면 덮어씁니다. 기본 제공 프리셋(기본·브루탈리즘)은 크기·정렬·폰트는 그대로 두고 굵기·색·효과·배경만 바꿉니다.</p>
+    </div>
+  </div>
+</dialog>
+
+<!-- 폴더 아이콘 만들기 -->
+<dialog id="folderDlg">
+  <div class="dlg-head"><h2>폴더 아이콘</h2><button id="folderClose" class="ghost">닫기</button></div>
+  <div class="dlg-body">
+    <div class="fd-wrap">
+      <canvas id="folderCanvas" width="1024" height="1024"></canvas>
+      <div class="fd-side">
+        <div class="group">
+          <h3>스타일</h3>
+          <span class="seg">
+            <label><input type="radio" name="fdStyle" value="light" checked>밝은 유리</label>
+            <label><input type="radio" name="fdStyle" value="dark">어두운 유리</label>
+          </span>
+          <label class="f">이름<input id="fdName" type="text" value="My Files"></label>
+          <label class="f">보조 글 (비우면 안 보임)<input id="fdSub" type="text" placeholder="예: Wed 19 Aug"></label>
+          <label class="check"><input id="fdPlus" type="checkbox" checked> ＋ 버튼 표시</label>
+        </div>
+        <div class="group">
+          <h3>뒤판 그림</h3>
+          <div class="row"><button id="fdImgBtn" class="grow">이미지 업로드</button><button id="fdImgDel" class="ghost danger">제거</button></div>
+          <input id="fdImgFile" type="file" accept="image/*" hidden>
+          <span class="hint" id="fdImgState">기본 그라디언트 사용 중</span>
+          <div class="prop"><span class="k">그라디언트 색</span>
+            <span class="fd-colors"><input id="fdC1" type="color" value="#e2392f"><input id="fdC2" type="color" value="#2c6db5"><input id="fdC3" type="color" value="#0b0d12"></span></div>
+          <label class="f">유리 흐림<span class="count" id="fdBlurVal"></span><input id="fdBlur" type="range" min="0" max="80" step="1" value="36"></label>
+        </div>
+        <div class="group">
+          <h3>내보내기</h3>
+          <button id="fdSave" class="wide primary">PNG 저장 (1024×1024)</button>
+          <button id="fdCopy" class="wide">이미지 복사 (Finder에 붙여넣기용)</button>
+          <p class="hint">Finder에서 폴더 선택 → ⌘I(정보 가져오기) → 왼쪽 위 작은 아이콘 클릭 → ⌘V. 저장한 PNG는 미리보기 앱에서 열어 ⌘A·⌘C 한 뒤 붙여넣어도 됩니다.</p>
+        </div>
+      </div>
     </div>
   </div>
 </dialog>
@@ -1820,6 +1867,148 @@ for (const el of [$('#mvSize'), $('#mvBg'), $('#mvShape'), $('#mvNames')]) el.ad
 try { const v = JSON.parse(localStorage.getItem('ct-multiview') || 'null'); if (v) { $('#mvSize').value = v.size; $('#mvBg').value = v.bg; $('#mvShape').value = v.shape; $('#mvNames').checked = v.names; } } catch { /* 기본값 */ }
 mvDlg.addEventListener('close', () => {
   try { localStorage.setItem('ct-multiview', JSON.stringify({ size: $('#mvSize').value, bg: $('#mvBg').value, shape: $('#mvShape').value, names: $('#mvNames').checked })); } catch { /* 이번 세션만 */ }
+});
+
+// ───────── 폴더 아이콘 만들기 (맥 Finder용 1024×1024 투명 PNG) ─────────
+const folderDlg = $('#folderDlg'), fcv = $('#folderCanvas'), fctx = fcv.getContext('2d');
+const FD = { img: null };   // 뒤판에 넣은 이미지 { el, blob }
+const FD_FONT = '-apple-system, "SF Pro Display", "Apple SD Gothic Neo", "Helvetica Neue", sans-serif';
+// 레퍼런스 비율을 1024 칸에 옮긴 모양 (꼭짓점 목록, 모서리는 둥글게)
+const FD_SHAPE = {
+  light: {   // 뒤판 탭 = 오른쪽 위, 앞판 탭 = 왼쪽 위
+    back: [[96, 278], [520, 278], [606, 186], [928, 186], [928, 839], [96, 839]],
+    front: [[96, 353], [392, 353], [478, 439], [928, 439], [928, 839], [96, 839]],
+  },
+  dark: {    // 뒤판 = 탭 없는 판, 앞판 = 오른쪽 탭 + 아래가 좁은 사다리꼴 (열린 폴더)
+    back: [[112, 161], [912, 161], [912, 820], [112, 820]],
+    front: [[60, 469], [590, 469], [676, 372], [964, 372], [924, 863], [100, 863]],
+  },
+};
+function polyPath(ctx, pts, r) {   // 꼭짓점을 arcTo로 둥글린 닫힌 경로
+  ctx.beginPath();
+  const n = pts.length, mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  const s = mid(pts[n - 1], pts[0]); ctx.moveTo(s[0], s[1]);
+  for (let i = 0; i < n; i++) { const p = pts[i], q = pts[(i + 1) % n]; ctx.arcTo(p[0], p[1], q[0], q[1], r); }
+  ctx.closePath();
+}
+const bbox = (pts) => { const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]); return { x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) }; };
+// 기본 뒤판 그림: 바탕색 위에 사선 띠를 크게 흐려 깐 추상 그라디언트
+function fdDefaultArt(c1, c2, c3) {
+  const c = document.createElement('canvas'); c.width = c.height = 1024;
+  const x = c.getContext('2d');
+  x.fillStyle = c3; x.fillRect(0, 0, 1024, 1024);
+  x.filter = 'blur(60px)';
+  x.translate(512, 512); x.rotate(-0.6); x.translate(-512, -512);
+  for (const [col, y, h, a] of [[c1, 120, 220, 1], [c3, 330, 120, 1], [c2, 430, 260, 1], ['#ffffff', 600, 90, .45], [c1, 720, 160, .8], [c2, 900, 200, .9]]) {
+    x.globalAlpha = a; x.fillStyle = col; x.fillRect(-300, y, 1624, h);
+  }
+  return c;
+}
+function fdOpts() {
+  return { style: $('input[name=fdStyle]:checked').value, name: $('#fdName').value, sub: $('#fdSub').value, plus: $('#fdPlus').checked,
+    c1: $('#fdC1').value, c2: $('#fdC2').value, c3: $('#fdC3').value, blur: +$('#fdBlur').value };
+}
+function drawCover(ctx, src, b) {   // 그림을 상자 b에 꽉 차게 (넘치는 쪽은 잘림)
+  const w = src.naturalWidth || src.width, h = src.naturalHeight || src.height, s = Math.max(b.w / w, b.h / h);
+  ctx.drawImage(src, b.x + (b.w - w * s) / 2, b.y + (b.h - h * s) / 2, w * s, h * s);
+}
+function renderFolder(ctx, o) {
+  const S2 = FD_SHAPE[o.style], dark = o.style === 'dark', R = 46;
+  const art = FD.img ? FD.img.el : fdDefaultArt(o.c1, o.c2, o.c3);
+  const artBox = bbox([...S2.back, ...S2.front]);
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, 1024, 1024);
+  ctx.setTransform(ctx.canvas.width / 1024, 0, 0, ctx.canvas.width / 1024, 0, 0);
+  // 1) 뒤판: 그림자 → 그림 → 가장자리 빛
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,.28)'; ctx.shadowBlur = 40; ctx.shadowOffsetY = 16;
+  polyPath(ctx, S2.back, R); ctx.fillStyle = o.c3; ctx.fill();
+  ctx.restore();
+  ctx.save(); polyPath(ctx, S2.back, R); ctx.clip(); drawCover(ctx, art, artBox);
+  if (dark) { ctx.fillStyle = 'rgba(0,0,0,.12)'; ctx.fillRect(0, 0, 1024, 1024); }
+  ctx.restore();
+  polyPath(ctx, S2.back, R); ctx.lineWidth = 2; ctx.strokeStyle = dark ? 'rgba(255,255,255,.14)' : 'rgba(255,255,255,.35)'; ctx.stroke();
+  // 2) 앞판 유리: 그림자 → 같은 그림을 흐려서 비춤 → 색 막 → 가장자리 빛
+  ctx.save();
+  ctx.shadowColor = dark ? 'rgba(0,0,0,.55)' : 'rgba(0,0,0,.22)'; ctx.shadowBlur = dark ? 70 : 50; ctx.shadowOffsetY = dark ? 34 : 22;
+  polyPath(ctx, S2.front, R); ctx.fillStyle = dark ? '#111114' : '#f4f4f4'; ctx.fill();
+  ctx.restore();
+  ctx.save(); polyPath(ctx, S2.front, R); ctx.clip();
+  ctx.filter = `blur(${o.blur}px)`; drawCover(ctx, art, { x: artBox.x - 60, y: artBox.y - 60, w: artBox.w + 120, h: artBox.h + 120 }); ctx.filter = 'none';
+  const fb = bbox(S2.front), g = ctx.createLinearGradient(0, fb.y, 0, fb.y + fb.h);
+  if (dark) { g.addColorStop(0, 'rgba(14,14,17,.62)'); g.addColorStop(.45, 'rgba(14,14,17,.86)'); g.addColorStop(1, 'rgba(10,10,12,.96)'); }
+  else { g.addColorStop(0, 'rgba(255,255,255,.22)'); g.addColorStop(.55, 'rgba(255,255,255,.55)'); g.addColorStop(1, 'rgba(255,255,255,.96)'); }
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 1024, 1024);
+  ctx.restore();
+  polyPath(ctx, S2.front, R); ctx.lineWidth = 3; ctx.strokeStyle = dark ? 'rgba(255,255,255,.16)' : 'rgba(255,255,255,.85)'; ctx.stroke();
+  // 3) 글자
+  ctx.textBaseline = 'alphabetic';
+  if (dark) {
+    ctx.textAlign = 'left'; ctx.fillStyle = '#f2f2f2'; ctx.font = `600 50px ${FD_FONT}`;
+    ctx.fillText(o.name, 690, 448, 250);
+    if (o.sub) { ctx.fillStyle = '#8c8c90'; ctx.font = '400 38px "SF Mono", Menlo, monospace'; ctx.fillText(o.sub, 690, 500, 250); }
+  } else {
+    ctx.textAlign = 'left'; ctx.fillStyle = '#141414'; ctx.font = `600 58px ${FD_FONT}`;
+    ctx.fillText(o.name, 166, 748, o.plus ? 540 : 720);
+    if (o.sub) { ctx.fillStyle = '#6b6b6b'; ctx.font = '400 34px "SF Mono", Menlo, monospace'; ctx.fillText(o.sub, 168, 796, 540); }
+  }
+  // 4) ＋ 버튼 (검정 둥근 사각, 밝은 유리 = 오른쪽 아래 / 어두운 유리 = 왼쪽 아래)
+  if (o.plus) {
+    const bx = dark ? 150 : 731, by = dark ? 690 : 645, bs = 153;
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 10;
+    ctx.beginPath(); ctx.roundRect(bx, by, bs, bs, 44);
+    const bg = ctx.createLinearGradient(0, by, 0, by + bs); bg.addColorStop(0, '#3a3a3c'); bg.addColorStop(.35, '#141414'); bg.addColorStop(1, '#000');
+    ctx.fillStyle = bg; ctx.fill(); ctx.restore();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 7; ctx.lineCap = 'round';
+    const cx = bx + bs / 2, cy = by + bs / 2, a = 26;
+    ctx.beginPath(); ctx.moveTo(cx - a, cy); ctx.lineTo(cx + a, cy); ctx.moveTo(cx, cy - a); ctx.lineTo(cx, cy + a); ctx.stroke();
+  }
+}
+function drawFolderPreview() {
+  const o = fdOpts();
+  folderDlg.dataset.preview = o.style;
+  $('#fdBlurVal').textContent = o.blur;
+  $('#fdImgState').textContent = FD.img ? '올린 이미지 사용 중 (그라디언트 색은 무시)' : '기본 그라디언트 사용 중';
+  renderFolder(fctx, o);
+  try { localStorage.setItem('ct-folder', JSON.stringify(o)); } catch { /* 이번 세션만 */ }
+}
+try {
+  const o = JSON.parse(localStorage.getItem('ct-folder') || 'null');
+  if (o) {
+    const r = $(`input[name=fdStyle][value="${o.style === 'dark' ? 'dark' : 'light'}"]`); if (r) r.checked = true;
+    $('#fdName').value = o.name ?? 'My Files'; $('#fdSub').value = o.sub ?? ''; $('#fdPlus').checked = o.plus !== false;
+    for (const k of ['c1', 'c2', 'c3']) if (/^#[0-9a-f]{6}$/i.test(o[k] || '')) $('#fd' + k.toUpperCase()).value = o[k];
+    if (Number.isFinite(o.blur)) $('#fdBlur').value = o.blur;
+  }
+} catch { /* 기본값 */ }
+DB.get('kv', 'folderImg').then(async (blob) => { if (blob) FD.img = { el: await loadImage(blob), blob }; if (folderDlg.open) drawFolderPreview(); }).catch(() => {});
+$('#folderOpen').addEventListener('click', () => { folderDlg.showModal(); drawFolderPreview(); });
+$('#folderClose').addEventListener('click', () => folderDlg.close());
+folderDlg.addEventListener('click', (e) => { if (e.target === folderDlg) folderDlg.close(); });
+for (const el of $$('#folderDlg .fd-side input:not([type=file])')) el.addEventListener('input', drawFolderPreview);
+// 스타일을 바꾸면 레퍼런스처럼 밝은 유리 = ＋ 버튼, 어두운 유리 = 날짜로 기본 구성을 맞춤
+for (const r of $$('input[name=fdStyle]')) r.addEventListener('change', () => {
+  const dark = r.value === 'dark';
+  $('#fdPlus').checked = !dark;
+  if (dark && !$('#fdSub').value) $('#fdSub').value = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).replace(',', '');
+  if (!dark) $('#fdSub').value = '';
+  drawFolderPreview();
+});
+$('#fdImgBtn').addEventListener('click', () => $('#fdImgFile').click());
+$('#fdImgFile').addEventListener('change', async (e) => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try { FD.img = { el: await loadImage(f), blob: f }; DB.put('kv', 'folderImg', f).catch(() => {}); drawFolderPreview(); }
+  catch { toast('이미지를 읽지 못했습니다.'); }
+});
+$('#fdImgDel').addEventListener('click', () => { FD.img = null; DB.del('kv', 'folderImg').catch(() => {}); drawFolderPreview(); });
+const folderBlob = () => { drawFolderPreview(); return new Promise((ok, fail) => fcv.toBlob((b) => (b ? ok(b) : fail(new Error('PNG 생성 실패'))), 'image/png')); };
+$('#fdSave').addEventListener('click', async () => {
+  const base = $('#fdName').value.replace(/[\/\\:*?"<>|\x00-\x1f]/g, '').trim() || 'folder';
+  saveBlob(await folderBlob(), `${base}-folder-icon.png`);
+});
+$('#fdCopy').addEventListener('click', async () => {
+  try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': folderBlob() })]); toast('이미지를 복사했습니다. Finder 정보 가져오기(⌘I) 창의 아이콘을 누르고 ⌘V 하세요.'); }
+  catch { toast('이 브라우저에서는 이미지 복사가 막혀 있습니다. PNG로 저장한 뒤 미리보기 앱에서 복사하세요.'); }
 });
 
 // ───────── 단축키 ─────────
