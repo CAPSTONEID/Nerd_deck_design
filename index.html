@@ -655,16 +655,37 @@
             <label><input type="radio" name="fdStyle" value="dark">어두운 유리</label>
           </span>
           <label class="f">이름<input id="fdName" type="text" value="My Files"></label>
+          <label class="f">이름 폰트<select id="fdFont"></select></label>
+          <label class="f">굵기
+            <select id="fdWeight">
+              <option value="400">400 Regular</option><option value="500">500 Medium</option><option value="600" selected>600 Semibold</option>
+              <option value="700">700 Bold</option><option value="800">800 Heavy</option><option value="900">900 Black</option>
+            </select>
+          </label>
+          <label class="f">글자 크기<span class="count" id="fdSizeVal"></span><input id="fdSize" type="range" min="32" max="96" step="2" value="58"></label>
           <label class="f">보조 글 (비우면 안 보임)<input id="fdSub" type="text" placeholder="예: Wed 19 Aug"></label>
           <label class="check"><input id="fdPlus" type="checkbox" checked> ＋ 버튼 표시</label>
         </div>
         <div class="group">
           <h3>뒤판 그림</h3>
-          <div class="row"><button id="fdImgBtn" class="grow">이미지 업로드</button><button id="fdImgDel" class="ghost danger">제거</button></div>
+          <span class="seg">
+            <label><input type="radio" name="fdFill" value="gradient" checked>그라디언트</label>
+            <label><input type="radio" name="fdFill" value="image">이미지</label>
+            <label><input type="radio" name="fdFill" value="solid">단색</label>
+          </span>
+          <div class="stack" data-fd="gradient">
+            <div class="presets"><span class="lbl">다크 테마</span><span id="fdThemesDark" class="fd-colors"></span></div>
+            <div class="presets"><span class="lbl">라이트 테마</span><span id="fdThemesLight" class="fd-colors"></span></div>
+            <div class="prop"><span class="k">그라디언트 색</span>
+              <span class="fd-colors"><input id="fdC1" type="color" value="#e2392f"><input id="fdC2" type="color" value="#2c6db5"><input id="fdC3" type="color" value="#0b0d12"></span></div>
+          </div>
+          <div class="stack" data-fd="image" hidden>
+            <div class="row"><button id="fdImgBtn" class="grow">이미지 업로드</button><button id="fdImgDel" class="ghost danger">제거</button></div>
+            <span class="hint" id="fdImgState"></span>
+          </div>
           <input id="fdImgFile" type="file" accept="image/*" hidden>
-          <span class="hint" id="fdImgState">기본 그라디언트 사용 중</span>
-          <div class="prop"><span class="k">그라디언트 색</span>
-            <span class="fd-colors"><input id="fdC1" type="color" value="#e2392f"><input id="fdC2" type="color" value="#2c6db5"><input id="fdC3" type="color" value="#0b0d12"></span></div>
+          <div class="prop" data-fd="solid" hidden><span class="k">색</span>
+            <span class="fd-colors"><input id="fdSolid" type="color" value="#2c6db5"></span></div>
           <label class="f">유리 흐림<span class="count" id="fdBlurVal"></span><input id="fdBlur" type="range" min="0" max="80" step="1" value="36"></label>
         </div>
         <div class="group">
@@ -1873,16 +1894,11 @@ mvDlg.addEventListener('close', () => {
 const folderDlg = $('#folderDlg'), fcv = $('#folderCanvas'), fctx = fcv.getContext('2d');
 const FD = { img: null };   // 뒤판에 넣은 이미지 { el, blob }
 const FD_FONT = '-apple-system, "SF Pro Display", "Apple SD Gothic Neo", "Helvetica Neue", sans-serif';
-// 레퍼런스 비율을 1024 칸에 옮긴 모양 (꼭짓점 목록, 모서리는 둥글게)
+// 레퍼런스 비율을 1024 칸에 옮긴 모양 (꼭짓점 목록, 모서리는 둥글게). 두 스타일 공통:
+// 뒤판 = 탭 없는 평평한 판, 앞판 = 오른쪽 탭 + 아래가 좁은 사다리꼴 (열린 폴더)
 const FD_SHAPE = {
-  light: {   // 뒤판 탭 = 오른쪽 위, 앞판 탭 = 왼쪽 위
-    back: [[96, 278], [520, 278], [606, 186], [928, 186], [928, 839], [96, 839]],
-    front: [[96, 353], [392, 353], [478, 439], [928, 439], [928, 839], [96, 839]],
-  },
-  dark: {    // 뒤판 = 탭 없는 판, 앞판 = 오른쪽 탭 + 아래가 좁은 사다리꼴 (열린 폴더)
-    back: [[112, 161], [912, 161], [912, 820], [112, 820]],
-    front: [[60, 469], [590, 469], [676, 372], [964, 372], [924, 863], [100, 863]],
-  },
+  back: [[112, 161], [912, 161], [912, 820], [112, 820]],
+  front: [[60, 469], [590, 469], [676, 372], [964, 372], [924, 863], [100, 863]],
 };
 function polyPath(ctx, pts, r) {   // 꼭짓점을 arcTo로 둥글린 닫힌 경로
   ctx.beginPath();
@@ -1906,15 +1922,23 @@ function fdDefaultArt(c1, c2, c3) {
 }
 function fdOpts() {
   return { style: $('input[name=fdStyle]:checked').value, name: $('#fdName').value, sub: $('#fdSub').value, plus: $('#fdPlus').checked,
+    fill: $('input[name=fdFill]:checked').value, solid: $('#fdSolid').value,
+    font: $('#fdFont').value || '', weight: +$('#fdWeight').value, size: +$('#fdSize').value,
     c1: $('#fdC1').value, c2: $('#fdC2').value, c3: $('#fdC3').value, blur: +$('#fdBlur').value };
+}
+// 뒤판 그림: 이미지(올린 게 없으면 그라디언트로 대신) · 단색 · 그라디언트
+function fdArt(o) {
+  if (o.fill === 'image' && FD.img) return FD.img.el;
+  if (o.fill === 'solid') { const c = document.createElement('canvas'); c.width = c.height = 8; const x = c.getContext('2d'); x.fillStyle = o.solid; x.fillRect(0, 0, 8, 8); return c; }
+  return fdDefaultArt(o.c1, o.c2, o.c3);
 }
 function drawCover(ctx, src, b) {   // 그림을 상자 b에 꽉 차게 (넘치는 쪽은 잘림)
   const w = src.naturalWidth || src.width, h = src.naturalHeight || src.height, s = Math.max(b.w / w, b.h / h);
   ctx.drawImage(src, b.x + (b.w - w * s) / 2, b.y + (b.h - h * s) / 2, w * s, h * s);
 }
 function renderFolder(ctx, o) {
-  const S2 = FD_SHAPE[o.style], dark = o.style === 'dark', R = 46;
-  const art = FD.img ? FD.img.el : fdDefaultArt(o.c1, o.c2, o.c3);
+  const S2 = FD_SHAPE, dark = o.style === 'dark', R = 46;
+  const art = fdArt(o);
   const artBox = bbox([...S2.back, ...S2.front]);
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, 1024, 1024);
   ctx.setTransform(ctx.canvas.width / 1024, 0, 0, ctx.canvas.width / 1024, 0, 0);
@@ -1940,20 +1964,16 @@ function renderFolder(ctx, o) {
   ctx.fillStyle = g; ctx.fillRect(0, 0, 1024, 1024);
   ctx.restore();
   polyPath(ctx, S2.front, R); ctx.lineWidth = 3; ctx.strokeStyle = dark ? 'rgba(255,255,255,.16)' : 'rgba(255,255,255,.85)'; ctx.stroke();
-  // 3) 글자
-  ctx.textBaseline = 'alphabetic';
-  if (dark) {
-    ctx.textAlign = 'left'; ctx.fillStyle = '#f2f2f2'; ctx.font = `600 50px ${FD_FONT}`;
-    ctx.fillText(o.name, 690, 448, 250);
-    if (o.sub) { ctx.fillStyle = '#8c8c90'; ctx.font = '400 38px "SF Mono", Menlo, monospace'; ctx.fillText(o.sub, 690, 500, 250); }
-  } else {
-    ctx.textAlign = 'left'; ctx.fillStyle = '#141414'; ctx.font = `600 58px ${FD_FONT}`;
-    ctx.fillText(o.name, 166, 748, o.plus ? 540 : 720);
-    if (o.sub) { ctx.fillStyle = '#6b6b6b'; ctx.font = '400 34px "SF Mono", Menlo, monospace'; ctx.fillText(o.sub, 168, 796, 540); }
-  }
-  // 4) ＋ 버튼 (검정 둥근 사각, 밝은 유리 = 오른쪽 아래 / 어두운 유리 = 왼쪽 아래)
+  // 3) 글자: 두 스타일 모두 앞판 왼쪽 아래 (보조 글은 이름 아래)
+  ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+  const ny = o.sub ? 760 : 790, maxW = o.plus ? 560 : 740;
+  ctx.fillStyle = dark ? '#f2f2f2' : '#141414';
+  ctx.font = `${o.weight || 600} ${o.size || 58}px ${o.font ? `"${o.font}", ` : ''}${FD_FONT}`;
+  ctx.fillText(o.name, 160, ny, maxW);
+  if (o.sub) { ctx.fillStyle = dark ? '#8c8c90' : '#6b6b6b'; ctx.font = '400 36px "SF Mono", Menlo, monospace'; ctx.fillText(o.sub, 162, ny + 52, maxW); }
+  // 4) ＋ 버튼 (검정 둥근 사각, 앞판 오른쪽 아래)
   if (o.plus) {
-    const bx = dark ? 150 : 731, by = dark ? 690 : 645, bs = 153;
+    const bx = 736, by = 676, bs = 150;
     ctx.save();
     ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 10;
     ctx.beginPath(); ctx.roundRect(bx, by, bs, bs, 44);
@@ -1968,7 +1988,9 @@ function drawFolderPreview() {
   const o = fdOpts();
   folderDlg.dataset.preview = o.style;
   $('#fdBlurVal').textContent = o.blur;
-  $('#fdImgState').textContent = FD.img ? '올린 이미지 사용 중 (그라디언트 색은 무시)' : '기본 그라디언트 사용 중';
+  $('#fdSizeVal').textContent = o.size + 'px';
+  $('#fdImgState').textContent = FD.img ? '올린 이미지 사용 중' : '올린 이미지가 없어 그라디언트로 보여 줍니다';
+  for (const el of $$('[data-fd]')) el.hidden = el.dataset.fd !== o.fill;
   renderFolder(fctx, o);
   try { localStorage.setItem('ct-folder', JSON.stringify(o)); } catch { /* 이번 세션만 */ }
 }
@@ -1978,26 +2000,61 @@ try {
     const r = $(`input[name=fdStyle][value="${o.style === 'dark' ? 'dark' : 'light'}"]`); if (r) r.checked = true;
     $('#fdName').value = o.name ?? 'My Files'; $('#fdSub').value = o.sub ?? ''; $('#fdPlus').checked = o.plus !== false;
     for (const k of ['c1', 'c2', 'c3']) if (/^#[0-9a-f]{6}$/i.test(o[k] || '')) $('#fd' + k.toUpperCase()).value = o[k];
+    if (/^#[0-9a-f]{6}$/i.test(o.solid || '')) $('#fdSolid').value = o.solid;
+    const fr = $(`input[name=fdFill][value="${['image', 'solid'].includes(o.fill) ? o.fill : 'gradient'}"]`); if (fr) fr.checked = true;
     if (Number.isFinite(o.blur)) $('#fdBlur').value = o.blur;
+    if (Number.isFinite(o.size)) $('#fdSize').value = o.size;
+    if ([...$('#fdWeight').options].some((x) => +x.value === o.weight)) $('#fdWeight').value = o.weight;
+    FD.font = typeof o.font === 'string' ? o.font : '';
   }
 } catch { /* 기본값 */ }
+// 이름 폰트 목록: 편집기와 같은 폰트 목록(로컬 폰트·추가한 폰트 파일 포함). 맨 위 = 시스템 기본(SF)
+function fdFontList() {
+  const sel = $('#fdFont'), want = sel.value || FD.font || '';
+  if (want) fontNames.add(want);
+  sel.innerHTML = '<option value="">시스템 기본 (SF)</option>' + [...fontNames].filter((f) => !GENERIC.includes(f))
+    .map((f) => `<option value="${esc(f)}" style="font-family:'${esc(f)}'">${esc(f)}</option>`).join('');
+  sel.value = want;
+}
+// 폰트를 고르면 실제로 불러진 뒤에 한 번 더 그림 (처음 그릴 땐 대체 글꼴로 나올 수 있어서)
+$('#fdFont').addEventListener('change', () => {
+  const o = fdOpts(); if (!o.font) return;
+  document.fonts.load(`${o.weight} ${o.size}px "${o.font}"`, o.name || 'A').then(drawFolderPreview, () => {});
+});
+// 그라디언트 테마: 누르면 스타일(밝은·어두운 유리)과 색 3개를 한 번에 맞춤
+const FD_THEMES = [
+  { name: '레드 블루', style: 'dark', c: ['#e2392f', '#2c6db5', '#0b0d12'] },
+  { name: '오로라', style: 'dark', c: ['#00e5a8', '#7b5cff', '#05070d'] },
+  { name: '선셋', style: 'dark', c: ['#ff7a18', '#ff2e88', '#120a12'] },
+  { name: '딥 오션', style: 'dark', c: ['#1fb6ff', '#1e3a8a', '#03060f'] },
+  { name: '네온', style: 'dark', c: ['#c6ff00', '#00c2ff', '#07090c'] },
+  { name: '피치', style: 'light', c: ['#ffb199', '#ff6f91', '#fff4ef'] },
+  { name: '라벤더', style: 'light', c: ['#b8a4ff', '#7cc7ff', '#f6f3ff'] },
+  { name: '민트', style: 'light', c: ['#7ef2c8', '#4fb3ff', '#f1fbf8'] },
+  { name: '샌드', style: 'light', c: ['#f6c177', '#e8836b', '#fff8ec'] },
+  { name: '스카이', style: 'light', c: ['#8fd3ff', '#c9a7ff', '#f4f9ff'] },
+];
+for (const th of FD_THEMES) {
+  const b = document.createElement('button');
+  b.className = 'sw'; b.title = b.ariaLabel = `${th.name} (${th.style === 'dark' ? '어두운' : '밝은'} 유리)`;
+  b.style.setProperty('--c', `linear-gradient(135deg, ${th.c[0]}, ${th.c[1]} 60%, ${th.c[2]})`);
+  b.addEventListener('click', () => {
+    $(`input[name=fdStyle][value=${th.style}]`).checked = true;
+    $('input[name=fdFill][value=gradient]').checked = true;
+    ['#fdC1', '#fdC2', '#fdC3'].forEach((id, i) => { $(id).value = th.c[i]; });
+    drawFolderPreview();
+  });
+  $(th.style === 'dark' ? '#fdThemesDark' : '#fdThemesLight').append(b);
+}
 DB.get('kv', 'folderImg').then(async (blob) => { if (blob) FD.img = { el: await loadImage(blob), blob }; if (folderDlg.open) drawFolderPreview(); }).catch(() => {});
-$('#folderOpen').addEventListener('click', () => { folderDlg.showModal(); drawFolderPreview(); });
+$('#folderOpen').addEventListener('click', () => { fdFontList(); folderDlg.showModal(); drawFolderPreview(); });
 $('#folderClose').addEventListener('click', () => folderDlg.close());
 folderDlg.addEventListener('click', (e) => { if (e.target === folderDlg) folderDlg.close(); });
-for (const el of $$('#folderDlg .fd-side input:not([type=file])')) el.addEventListener('input', drawFolderPreview);
-// 스타일을 바꾸면 레퍼런스처럼 밝은 유리 = ＋ 버튼, 어두운 유리 = 날짜로 기본 구성을 맞춤
-for (const r of $$('input[name=fdStyle]')) r.addEventListener('change', () => {
-  const dark = r.value === 'dark';
-  $('#fdPlus').checked = !dark;
-  if (dark && !$('#fdSub').value) $('#fdSub').value = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).replace(',', '');
-  if (!dark) $('#fdSub').value = '';
-  drawFolderPreview();
-});
+for (const el of $$('#folderDlg .fd-side input:not([type=file]), #folderDlg .fd-side select')) el.addEventListener('input', drawFolderPreview);
 $('#fdImgBtn').addEventListener('click', () => $('#fdImgFile').click());
 $('#fdImgFile').addEventListener('change', async (e) => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
-  try { FD.img = { el: await loadImage(f), blob: f }; DB.put('kv', 'folderImg', f).catch(() => {}); drawFolderPreview(); }
+  try { FD.img = { el: await loadImage(f), blob: f }; DB.put('kv', 'folderImg', f).catch(() => {}); $('input[name=fdFill][value=image]').checked = true; drawFolderPreview(); }
   catch { toast('이미지를 읽지 못했습니다.'); }
 });
 $('#fdImgDel').addEventListener('click', () => { FD.img = null; DB.del('kv', 'folderImg').catch(() => {}); drawFolderPreview(); });
