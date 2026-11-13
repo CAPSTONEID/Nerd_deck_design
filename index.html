@@ -219,6 +219,28 @@
   .dlg-head button.ghost { color: var(--ink); }
   .dlg-body { padding: 16px 18px 20px; max-height: min(74vh, 640px); overflow: auto; }
   .count { color: var(--accent-text); font: 800 12px var(--mono); }
+  /* 스타일 프리셋 목록 */
+  .preset-list { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
+  .preset-list:empty::before { content: "저장한 프리셋이 없습니다"; color: var(--muted); font-size: 12px; }
+  .preset-list .pv { width: 36px; height: 28px; display: grid; place-items: center; border: var(--bd); font-weight: 800; font-size: 14px; flex: none; }
+  .preset-list .grow { font-weight: 700; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* 멀티뷰: 체크한 디자인을 한 화면에 모아 보기 */
+  #mvDlg { width: calc(100vw - 32px); height: calc(100vh - 32px); max-width: none; max-height: none; }
+  #mvDlg[open] { display: flex; flex-direction: column; }
+  #mvDlg .dlg-body { flex: 1; min-height: 0; max-height: none; display: flex; flex-direction: column; gap: 12px; }
+  .mv-bar { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; font-size: 12px; font-weight: 700; }
+  .mv-bar label { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .mv-bar select { width: auto; }
+  .mv-grid { flex: 1; min-height: 0; overflow: auto; display: flex; flex-wrap: wrap; gap: 20px; align-content: flex-start; padding: 20px; border: var(--bd); background: #111; color: #eee; }
+  .mv-grid[data-bg="light"] { background: #f2f2f2; color: #111; }
+  .mv-grid[data-bg="check"] { background: repeating-conic-gradient(#d4d4d4 0 25%, #fff 0 50%) 0 0 / 20px 20px; color: #111; }
+  .mv-item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; }
+  .mv-item canvas { display: block; outline: 3px solid transparent; outline-offset: 3px; }
+  .mv-item:hover canvas { outline-color: var(--accent); }
+  .mv-grid[data-shape="circle"] canvas { border-radius: 50%; }
+  .mv-grid[data-shape="round"] canvas { border-radius: 14%; }
+  .mv-item span { font: 700 11px var(--mono); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mv-grid[data-names="off"] .mv-item span { display: none; }
 
   .toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%); background: var(--ink); color: var(--accent); font-weight: 700;
     padding: 10px 18px; border: var(--bd); box-shadow: 5px 5px 0 var(--accent); z-index: 30; max-width: calc(100vw - 32px); }
@@ -264,6 +286,8 @@
       <b>파일 끌어다 놓기</b><span>이미지 1장 = 현재 디자인, 여러 장 = 장당 1개, 폰트 파일 = 폰트 추가</span>
     </div>
   </details>
+  <button id="mvOpen" title="체크한 디자인(없으면 전체)을 한 화면에 크게 모아 보기">멀티뷰</button>
+  <button id="setOpen" title="세트 파일 저장·불러오기, 스타일 프리셋">세트 · 프리셋</button>
   <button id="resetAll" class="ghost danger" title="모든 디자인을 지우고 새로 시작 (실행 취소 가능)">전체 삭제</button>
   <span class="vsep"></span>
   <button id="dlSel">선택 ZIP (0)</button>
@@ -563,6 +587,48 @@
     </div>
   </div>
 </dialog>
+
+<!-- 세트 파일 · 스타일 프리셋 -->
+<dialog id="setDlg">
+  <div class="dlg-head"><h2>세트 · 프리셋</h2><button id="setClose" class="ghost">닫기</button></div>
+  <div class="dlg-body">
+    <div class="group">
+      <h3>세트 파일</h3>
+      <label class="f">세트 이름<input id="setName" type="text" placeholder="예: 유튜브 편집 세트"></label>
+      <div class="row"><button id="setSaveAll" class="grow primary">전체 저장</button><button id="setSaveChecked" class="grow">체크한 것만 저장</button></div>
+      <label class="f">불러오는 방식
+        <select id="setMode">
+          <option value="replace">지금 작업을 세트로 바꾸기</option>
+          <option value="append">지금 작업 뒤에 추가</option>
+        </select>
+      </label>
+      <button id="setLoad" class="wide">세트 불러오기 (.ctset.json)</button>
+      <input id="setFile" type="file" accept=".json,application/json" hidden>
+      <p class="hint">디자인·이미지·추가한 폰트 파일·스타일 프리셋을 파일 하나에 담습니다. 다른 브라우저·기기에서 불러오면 바로 고쳐 쓸 수 있습니다. 컴퓨터에 설치된 폰트는 파일에 들어가지 않아 그 기기에도 설치돼 있어야 합니다. 세트 파일을 창에 끌어다 놓아도 불러옵니다. 불러온 뒤 ⌘/Ctrl+Z로 되돌릴 수 있습니다.</p>
+    </div>
+    <div class="group">
+      <h3>스타일 프리셋</h3>
+      <div class="row"><input id="presetName" class="grow" type="text" placeholder="프리셋 이름"><button id="presetSave">현재 스타일 저장</button></div>
+      <div id="presetList" class="preset-list"></div>
+      <p class="hint">선택한 텍스트의 폰트·굵기·기울임·크기·정렬·줄 간격·자간·글자색·외곽선·글로우와 배경을 저장합니다. 적용하면 지금 디자인과 프레임 줄에서 체크한 디자인에 들어갑니다(내용·위치·이미지는 그대로). 같은 이름으로 저장하면 덮어씁니다.</p>
+    </div>
+  </div>
+</dialog>
+
+<!-- 멀티뷰 -->
+<dialog id="mvDlg">
+  <div class="dlg-head"><h2>멀티뷰<span id="mvCount" class="badge"></span></h2><button id="mvClose" class="ghost">닫기</button></div>
+  <div class="dlg-body">
+    <div class="mv-bar">
+      <label>크기<input id="mvSize" type="range" min="80" max="360" step="10" value="180"><span id="mvSizeVal" class="count"></span></label>
+      <label>배경<select id="mvBg"><option value="dark">어둡게</option><option value="light">밝게</option><option value="check">체크무늬</option></select></label>
+      <label>모양<select id="mvShape"><option value="square">사각 (버튼)</option><option value="round">둥근 사각</option><option value="circle">원형 (다이얼)</option></select></label>
+      <label class="check"><input id="mvNames" type="checkbox" checked> 이름 표시</label>
+      <span class="hint">체크한 디자인만 보여 줍니다 (체크가 없으면 전체). 그림을 누르면 그 디자인을 편집합니다.</span>
+    </div>
+    <div id="mvGrid" class="mv-grid"></div>
+  </div>
+</dialog>
 <div id="toast" class="toast" role="status" hidden></div>
 
 <script>
@@ -585,7 +651,7 @@ const selText = () => { const d = cur(); return d.texts.find((t) => t.id === d.s
 
 const textDefaults = () => ({
   content: 'TEXT', font: 'Apple SD Gothic Neo', fontStyle: '', size: 50, weight: 700, italic: false,
-  align: 'center', lineHeight: 1, letterSpacing: 0, x: 150, y: 150,
+  align: 'center', lineHeight: 1.25, letterSpacing: 0, x: 150, y: 150,
   fill: { type: 'solid', color: '#ffffff', c1: '#ffd84d', c2: '#ff4d8d', angle: 90 },
   stroke: { width: 0, color: '#000000' },
   glow: { blur: 0, color: '#00e5ff' },
@@ -1262,6 +1328,8 @@ const hasFiles = (e) => [...(e.dataTransfer?.types || [])].includes('Files');
 function handleFiles(files) {
   const fonts = files.filter((f) => /\.(ttf|otf|woff2?)$/i.test(f.name));
   const imgs = files.filter((f) => f.type.startsWith('image/'));
+  const set = files.find((f) => /\.json$/i.test(f.name));
+  if (set) return loadSet(set);
   if (fonts.length) addFontFiles(fonts);
   if (imgs.length === 1) putImage(imgs[0]);
   else if (imgs.length > 1) batchImages(imgs);
@@ -1551,9 +1619,159 @@ function toast(s) {
   toastTimer = setTimeout(() => { el.hidden = true; }, 3200);
 }
 
+// ───────── 세트 파일 (다른 브라우저·기기로 옮겨서 이어 작업) ─────────
+const setDlg = $('#setDlg');
+const today = () => { const n = new Date(); return `${n.getFullYear()}${pad(n.getMonth() + 1)}${pad(n.getDate())}`; };
+const toDataURL = (blob) => new Promise((ok, fail) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = () => fail(r.error); r.readAsDataURL(blob); });
+const fromDataURL = async (url) => (await fetch(url)).blob();
+$('#setOpen').addEventListener('click', () => {
+  flush(); renderPresets();
+  if (!$('#setName').value) $('#setName').value = '세트-' + today();
+  setDlg.showModal();
+});
+$('#setClose').addEventListener('click', () => setDlg.close());
+setDlg.addEventListener('click', (e) => { if (e.target === setDlg) setDlg.close(); });
+
+// 디자인 + 쓰인 이미지 + 쓰인 폰트 파일 + 프리셋을 JSON 파일 하나로 내려받음 (이미지·폰트는 data URL로 넣음)
+async function saveSet(designs) {
+  if (!designs.length) return toast('저장할 디자인이 없습니다. 위 프레임 줄에서 체크하세요.');
+  flush();
+  const name = $('#setName').value.trim() || '세트-' + today();
+  const raw = JSON.parse(JSON.stringify(designs, strip));
+  const images = {}, fonts = {};
+  try {
+    for (const d of raw) if (d.image && !images[d.image.src]) { const r = IMG.get(d.image.src); if (r) images[d.image.src] = await toDataURL(r.blob); }
+    const used = new Set([...raw.flatMap((d) => d.texts.map((t) => t.font)), ...presets.map((p) => p.text.font)]);
+    for (const f of await DB.keys('font').catch(() => [])) {
+      if (!used.has(f)) continue;
+      const buf = await DB.get('font', f).catch(() => null);
+      if (buf) fonts[f] = await toDataURL(new Blob([buf]));
+    }
+  } catch { return toast('세트 파일을 만들지 못했습니다.'); }
+  const data = { app: 'loupedeck-icon-studio', kind: 'set', version: 1, name, savedAt: new Date().toISOString(), designs: raw, images, fonts, presets };
+  const file = (name.replace(/[\/\\:*?"<>|\x00-\x1f]/g, '').trim() || 'set') + '.ctset.json';
+  saveBlob(new Blob([JSON.stringify(data)], { type: 'application/json' }), file);
+  toast(`세트 "${name}"를 저장했습니다 (디자인 ${raw.length}개).`);
+}
+$('#setSaveAll').addEventListener('click', () => saveSet(S.designs));
+$('#setSaveChecked').addEventListener('click', () => saveSet(S.designs.filter((d) => d.checked)));
+
+// 세트 파일을 읽어 지금 작업을 바꾸거나 뒤에 붙임. 실행 취소 기록에 한 단계로 남음
+async function loadSet(file) {
+  let data;
+  try { data = JSON.parse(await file.text()); } catch { return toast('세트 파일을 읽지 못했습니다.'); }
+  if (!data || data.kind !== 'set' || !Array.isArray(data.designs)) return toast('이 도구에서 저장한 세트 파일이 아닙니다.');
+  flush();
+  try {
+    for (const [name, url] of Object.entries(data.fonts || {})) {
+      try { const buf = await (await fromDataURL(url)).arrayBuffer(); await registerFont(name, buf); DB.put('font', name, buf).catch(() => {}); } catch { /* 깨진 폰트는 건너뜀 */ }
+    }
+    for (const [src, url] of Object.entries(data.images || {})) {
+      if (IMG.has(src)) continue;
+      try { const blob = await fromDataURL(url); IMG.set(src, { el: await loadImage(blob), blob }); DB.put('img', src, blob).catch(() => {}); } catch { /* 없는 이미지는 비움 */ }
+    }
+    // 지금 작업과 id가 겹치지 않게 새 id를 붙여 되살림
+    const loaded = data.designs.filter((d) => d && typeof d === 'object')
+      .map((d) => revive({ ...d, id: uid++, texts: (Array.isArray(d.texts) ? d.texts : []).map((t) => ({ ...t, id: 't' + uid++ })) }));
+    if (!loaded.length) return toast('세트에 디자인이 없습니다.');
+    if ($('#setMode').value === 'append') { S.designs.push(...loaded); S.cur = S.designs.length - loaded.length; }
+    else { S.designs = loaded; S.cur = 0; }
+    mergePresets(data.presets);
+    renderFontList(); refreshAll();
+    for (const d of loaded) for (const t of d.texts) { prepareFace(t); loadFontFor(t); }
+    setDlg.close();
+    toast(`세트 "${data.name || file.name}"를 불러왔습니다 (디자인 ${loaded.length}개). ⌘/Ctrl+Z로 되돌릴 수 있습니다.`);
+  } catch { toast('세트 파일 내용이 깨져 있어 불러오지 못했습니다.'); }
+}
+$('#setLoad').addEventListener('click', () => $('#setFile').click());
+$('#setFile').addEventListener('change', (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) loadSet(f); });
+
+// ───────── 스타일 프리셋 (이 브라우저에 저장 + 세트 파일에 함께 담김) ─────────
+const PRESET_GROUPS = ['font', 'weight', 'italic', 'size', 'align', 'lineHeight', 'letterSpacing', 'fill', 'stroke', 'glow'];
+let presets = [];   // [{ name, text: 텍스트 스타일, bg: 배경 }]
+const savePresets = () => DB.put('kv', 'presets', presets).catch(() => {});
+const styleOf = (t) => Object.fromEntries(PRESET_GROUPS.flatMap((g) => AP_TEXT[g]).map((k) => [k, structuredClone(t[k])]));
+// 같은 이름은 덮어씀. 파일에서 온 값은 기본값으로 빈칸을 채워 정리
+function mergePresets(items) {
+  if (!Array.isArray(items)) return;
+  for (const p of items) {
+    if (!p || typeof p.name !== 'string' || !p.text || typeof p.text !== 'object') continue;
+    const clean = { name: p.name, text: styleOf(normText(p.text)), bg: { ...bgDefaults(), ...p.bg } };
+    const i = presets.findIndex((q) => q.name === p.name);
+    if (i >= 0) presets[i] = clean; else presets.push(clean);
+  }
+  savePresets(); renderPresets();
+}
+function renderPresets() {
+  const box = $('#presetList'); box.textContent = '';
+  presets.forEach((p, i) => {
+    const row = document.createElement('div'); row.className = 'row';
+    const pv = document.createElement('span'); pv.className = 'pv'; pv.textContent = 'Aa';
+    pv.style.background = p.bg.type === 'gradient' ? `linear-gradient(${p.bg.angle + 90}deg, ${p.bg.c1}, ${p.bg.c2})` : p.bg.color;
+    pv.style.color = p.text.fill.type === 'gradient' ? p.text.fill.c1 : p.text.fill.color;
+    pv.style.fontFamily = `"${p.text.font}", sans-serif`;
+    const nm = document.createElement('span'); nm.className = 'grow'; nm.textContent = p.name; nm.title = p.name;
+    const ap = document.createElement('button'); ap.textContent = '적용';
+    ap.addEventListener('click', () => applyPreset(p));
+    const del = document.createElement('button'); del.className = 'ghost danger'; del.textContent = '삭제';
+    del.addEventListener('click', () => { presets.splice(i, 1); savePresets(); renderPresets(); });
+    row.append(pv, nm, ap, del); box.append(row);
+  });
+}
+// 지금 디자인 + 체크한 디자인에 적용. 텍스트는 지금 선택한 텍스트와 같은 순서의 레이어에 넣음
+function applyPreset(p) {
+  const src = cur(), idx = Math.max(0, src.texts.findIndex((t) => t.id === src.sel));
+  const s = normText(p.text);
+  const targets = [...new Set([src, ...S.designs.filter((d) => d.checked)])];
+  for (const d of targets) {
+    d.bg = structuredClone(p.bg);
+    const t = d.texts[idx] || d.texts[0];
+    if (t) copyText(t, s, PRESET_GROUPS);
+  }
+  setDlg.close(); refreshAll();
+  for (const d of targets) for (const t of d.texts) loadFontFor(t);
+  toast(`프리셋 "${p.name}"를 ${targets.length}개 디자인에 적용했습니다. ⌘/Ctrl+Z로 되돌릴 수 있습니다.`);
+}
+$('#presetSave').addEventListener('click', () => {
+  const t = selText() || cur().texts[0];
+  if (!t) return toast('스타일을 가져올 텍스트가 없습니다. 텍스트를 먼저 추가하세요.');
+  const name = $('#presetName').value.trim() || `프리셋 ${presets.length + 1}`;
+  mergePresets([{ name, text: styleOf(t), bg: structuredClone(cur().bg) }]);
+  $('#presetName').value = '';
+  toast(`프리셋 "${name}"를 저장했습니다.`);
+});
+DB.get('kv', 'presets').then((v) => { if (Array.isArray(v)) { presets = []; mergePresets(v); } }).catch(() => {});
+
+// ───────── 멀티뷰: 체크한 디자인(없으면 전체)을 한 화면에 모아 보기 ─────────
+const mvDlg = $('#mvDlg'), mvGrid = $('#mvGrid');
+function renderMulti() {
+  const picked = S.designs.filter((d) => d.checked), shown = picked.length ? picked : S.designs;
+  const px = +$('#mvSize').value, dpr = window.devicePixelRatio || 1;
+  $('#mvSizeVal').textContent = px + 'px';
+  $('#mvCount').textContent = picked.length ? `체크 ${shown.length}` : `전체 ${shown.length}`;
+  Object.assign(mvGrid.dataset, { bg: $('#mvBg').value, shape: $('#mvShape').value, names: $('#mvNames').checked ? 'on' : 'off' });
+  mvGrid.textContent = '';
+  for (const d of shown) {
+    const item = document.createElement('div'); item.className = 'mv-item'; item.style.width = px + 'px';
+    const cv = document.createElement('canvas'); cv.width = cv.height = Math.round(px * dpr); cv.style.width = cv.style.height = px + 'px';
+    render(d, cv.getContext('2d'));
+    const nm = document.createElement('span'); nm.textContent = `${S.designs.indexOf(d) + 1}. ${d.name || '이름 없음'}`;
+    item.addEventListener('click', () => { mvDlg.close(); select(S.designs.indexOf(d)); });
+    item.append(cv, nm); mvGrid.append(item);
+  }
+}
+$('#mvOpen').addEventListener('click', () => { flush(); renderMulti(); mvDlg.showModal(); });
+$('#mvClose').addEventListener('click', () => mvDlg.close());
+mvDlg.addEventListener('click', (e) => { if (e.target === mvDlg) mvDlg.close(); });
+for (const el of [$('#mvSize'), $('#mvBg'), $('#mvShape'), $('#mvNames')]) el.addEventListener('input', renderMulti);
+try { const v = JSON.parse(localStorage.getItem('ct-multiview') || 'null'); if (v) { $('#mvSize').value = v.size; $('#mvBg').value = v.bg; $('#mvShape').value = v.shape; $('#mvNames').checked = v.names; } } catch { /* 기본값 */ }
+mvDlg.addEventListener('close', () => {
+  try { localStorage.setItem('ct-multiview', JSON.stringify({ size: $('#mvSize').value, bg: $('#mvBg').value, shape: $('#mvShape').value, names: $('#mvNames').checked })); } catch { /* 이번 세션만 */ }
+});
+
 // ───────── 단축키 ─────────
 document.addEventListener('keydown', (e) => {
-  if (bulkDlg.open || !S.designs.length) return;
+  if (document.querySelector('dialog[open]') || !S.designs.length) return;
   const mod = e.metaKey || e.ctrlKey, key = (e.key || '').toLowerCase();
   if (mod && key === 's') { e.preventDefault(); return saveCurrent(); }
   if (mod && key === 'z') {
