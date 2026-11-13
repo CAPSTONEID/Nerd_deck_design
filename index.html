@@ -1966,7 +1966,7 @@ function renderFolder(ctx, o) {
   polyPath(ctx, S2.front, R); ctx.lineWidth = 3; ctx.strokeStyle = dark ? 'rgba(255,255,255,.16)' : 'rgba(255,255,255,.85)'; ctx.stroke();
   // 3) 글자: 두 스타일 모두 앞판 왼쪽 아래 (보조 글은 이름 아래)
   ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
-  const ny = o.sub ? 728 : 780, maxW = o.plus ? 560 : 740;
+  const ny = o.sub ? 744 : 790, maxW = o.plus ? 560 : 740;
   ctx.fillStyle = dark ? '#f2f2f2' : '#141414';
   ctx.font = `${o.weight || 600} ${o.size || 58}px ${o.font ? `"${o.font}", ` : ''}${FD_FONT}`;
   ctx.fillText(o.name, 160, ny, maxW);
