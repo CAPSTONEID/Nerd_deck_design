@@ -100,41 +100,44 @@
     box-shadow: var(--raise), 0 24px 60px rgba(0, 0, 0, .55); display: grid; grid-template-columns: auto 1fr; gap: 8px 14px; font-size: 12px; color: var(--muted); }
   .help .pop b { color: var(--text); font-weight: 500; white-space: nowrap; }
 
-  /* ── 3분할 셸: 떠 있는 카드 3장 ── */
-  .shell { display: grid; grid-template-columns: 280px minmax(0, 1fr) 340px; gap: 14px; min-height: 0; }
+  /* ── 2분할 셸: 작업대(프레임 줄 + 편집 캔버스) | 인스펙터 ── */
+  .shell { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 14px; min-height: 0; }
+  @media (min-width: 1100px) { .shell { grid-template-columns: minmax(0, 1fr) 480px; } }
+  @media (min-width: 1360px) { .shell { grid-template-columns: minmax(0, 1fr) clamp(520px, 38vw, 660px); } }
   .pane { background: var(--bg); display: flex; flex-direction: column; min-height: 0; border-radius: var(--r-xl); box-shadow: var(--raise); overflow: hidden; }
-  .pane-head { display: flex; align-items: center; gap: 8px; padding: 16px 14px 12px 18px; }
-  .pane-head h2 { font-size: 13px; margin: 0 auto 0 0; }
   .badge { color: var(--muted); font: 500 12px var(--mono); margin-left: 6px; }
 
-  /* 왼쪽: 썸네일 타일 (파인 쟁반 안에 놓인 카드) */
-  .toolbar { display: flex; gap: 2px; padding: 0 12px 12px; }
-  .toolbar button { padding: 6px 9px; font-size: 12px; }
-  .tiles { flex: 1; overflow: auto; margin: 0 12px; padding: 12px; border-radius: var(--r); background: var(--well); box-shadow: var(--press);
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; align-content: start; }
-  .tile { position: relative; cursor: pointer; border-radius: 12px; padding: 7px; transition: box-shadow .15s; }
-  .tile:hover { box-shadow: var(--raise-sm); }
-  .tile.on { background: var(--bg); box-shadow: var(--raise-sm), 0 0 0 1.5px var(--accent-line); }
-  .tile.drop { box-shadow: -4px 0 0 var(--accent); }
-  .tile canvas { width: 100%; aspect-ratio: 1; display: block; border-radius: 9px; background: #000; box-shadow: 0 0 0 1px rgba(255, 255, 255, .04), 0 4px 10px rgba(0, 0, 0, .5); }
-  .tile .nm { display: flex; gap: 5px; margin-top: 7px; font-size: 12px; }
-  .tile .nm b { color: var(--faint); font: 500 11px/1.6 var(--mono); }
+  /* 프레임 줄: 피그마 프레임처럼 이름표 + 화면을 가로로 나열 */
+  .frames-head { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; padding: 14px 16px 2px 22px; }
+  .frames-head h2 { font-size: 13px; margin: 0 10px 0 0; }
+  .frames-head button { padding: 6px 10px; font-size: 12px; }
+  .frames-head > button:not(.ghost) { margin-left: 6px; }
+  .selbar { display: flex; align-items: center; gap: 2px; margin-left: 8px; padding: 3px 4px 3px 12px; border-radius: var(--r-sm); background: var(--accent-soft); font-size: 12px; box-shadow: var(--press-sm); }
+  .selbar span { margin-right: 4px; color: var(--accent); font-weight: 600; white-space: nowrap; }
+  .selbar button { padding: 4px 8px; }
+  .frames { flex: none; display: flex; gap: 18px; overflow-x: auto; overflow-y: hidden; padding: 12px 22px 18px; border-bottom: 1px solid rgba(0, 0, 0, .4); box-shadow: 0 1px 0 rgba(255, 255, 255, .03); }
+  .tile { position: relative; flex: none; width: 88px; cursor: pointer; }
+  .tile .nm { display: flex; gap: 5px; margin-bottom: 6px; font-size: 11px; color: var(--muted); transition: color .15s; }
+  .tile .nm b { color: var(--faint); font: 500 10px/1.7 var(--mono); }
   .tile .nm span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .tile input { position: absolute; top: 12px; left: 12px; }
+  .tile .thumb { position: relative; }
+  .tile canvas { width: 100%; aspect-ratio: 1; display: block; border-radius: 8px; background: #000;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, .05), 0 6px 14px rgba(0, 0, 0, .5); transition: box-shadow .15s; }
+  .tile:hover canvas { box-shadow: 0 0 0 1.5px rgba(198, 255, 0, .35), 0 6px 14px rgba(0, 0, 0, .5); }
+  .tile.on .nm, .tile.on .nm b { color: var(--accent); }
+  .tile.on canvas { box-shadow: 0 0 0 2px var(--accent), 0 0 18px rgba(198, 255, 0, .25); }
+  .tile.drop::before { content: ""; position: absolute; left: -11px; top: 20px; bottom: 0; width: 3px; border-radius: 2px; background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  .tile input { position: absolute; top: 6px; left: 6px; width: 16px; height: 16px; }
   .tile input:not(:checked) { background: rgba(20, 22, 26, .85); }
-  .selbar { display: flex; align-items: center; gap: 2px; margin: 12px 12px 0; padding: 6px 8px 6px 14px; border-radius: var(--r-sm); background: var(--accent-soft); font-size: 12px; box-shadow: var(--press-sm); }
-  .selbar span { margin-right: auto; color: var(--accent); font-weight: 600; }
-  .selbar button { padding: 5px 9px; font-size: 12px; }
-  .note { padding: 12px 18px 16px; }
 
   /* 가운데: 스테이지 (파인 작업대) */
-  .stage { min-height: 0; overflow: auto; border-radius: var(--r-xl); background: var(--well); box-shadow: var(--press);
+  .stage { min-height: 0; display: flex; flex-direction: column; overflow: hidden; border-radius: var(--r-xl); background: var(--well); box-shadow: var(--press);
     background-image: radial-gradient(rgba(255, 255, 255, .03) 1px, transparent 1px); background-size: 22px 22px; }
-  .stage-inner { min-height: 100%; display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 36px; align-items: center; justify-items: center; padding: 28px 32px; }
+  .stage-inner { flex: 1; min-height: 0; overflow: auto; display: grid; align-items: center; justify-items: center; padding: 20px 24px 24px; container-type: size; }
   .view { margin: 0; display: grid; justify-items: center; gap: 14px; width: 100%; }
-  .view figcaption { font-size: 11px; font-weight: 600; color: var(--faint); letter-spacing: .04em; }
   .stage-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; }
-  #editor { width: min(100%, calc(100vh - 260px), 580px); aspect-ratio: 1; border-radius: 14px; cursor: grab; touch-action: none;
+  #editor { width: min(100cqw, calc(100cqh - 92px), 640px);   /* 작업대 남은 칸(정렬 바·안내 문구 제외)에 꽉 맞는 정사각형 */
+    aspect-ratio: 1; border-radius: 14px; cursor: grab; touch-action: none;
     background: repeating-conic-gradient(#24272c 0 25%, #1b1d21 0 50%) 0 0 / 20px 20px; box-shadow: -8px -8px 18px var(--hi), 12px 12px 26px rgba(0, 0, 0, .65); }
   #editor:active { cursor: grabbing; }
   body.dropping #editor { box-shadow: 0 0 0 3px var(--accent), 0 0 30px rgba(198, 255, 0, .35); }
@@ -147,25 +150,6 @@
   .toggle { height: 38px; border-radius: var(--r); color: var(--muted); }
   .toggle[aria-pressed=true], .toggle[aria-pressed=true]:hover:not(:disabled) { color: var(--accent); box-shadow: var(--press-sm); text-shadow: 0 0 10px rgba(198, 255, 0, .5); }
 
-  /* 장비 목업: 160×150 좌표계를 %로 배치 */
-  .device { position: relative; width: min(100%, calc((100vh - 280px) * 1.067), 440px); aspect-ratio: 160 / 150;
-    background: linear-gradient(150deg, #2e3137, #1b1d21 70%); border-radius: 7% / 7.5%;
-    box-shadow: -8px -8px 20px var(--hi), 14px 16px 34px rgba(0, 0, 0, .65), inset 0 1px 0 #ffffff14; }
-  .device > * { position: absolute; }
-  .knob { border-radius: 50%; background: radial-gradient(circle at 35% 30%, #63666d, #2a2c31 55%, #141518);
-    box-shadow: inset 0 0 0 1px #000, 0 2px 4px #0009; }
-  .bezel { background: #07080a; border-radius: 4%; box-shadow: inset 0 0 0 1px #000, inset 0 2px 6px #000; }
-  .strip { background: #121419; border-radius: 3px; }
-  .slot { background: #000; border-radius: 8%; overflow: hidden; cursor: pointer; }
-  .slot.on { outline: 2px solid var(--accent); outline-offset: 1px; box-shadow: 0 0 10px rgba(198, 255, 0, .45); }
-  .slot canvas, .dial-screen canvas { width: 100%; height: 100%; display: block; }
-  .rbtn { border-radius: 50%; background: #2c2f35; box-shadow: inset 0 -1px 0 #0007, 0 1px 0 #ffffff10, 0 2px 3px #0008; }
-  .sbtn { border-radius: 14%; background: #2c2f35; box-shadow: inset 0 -1px 0 #0007, 0 1px 0 #ffffff10, 0 2px 3px #0008; }
-  .dial { border-radius: 50%; background: repeating-conic-gradient(#2a2c31 0 2deg, #1c1e22 2deg 4deg);
-    box-shadow: 0 6px 14px #000a, inset 0 0 0 2px #111; }
-  .dial-screen { border-radius: 50%; overflow: hidden; background: #000; box-shadow: 0 0 0 2px #050505; }
-  .pager { display: flex; align-items: center; gap: 8px; color: var(--muted); font: 12px var(--mono); }
-
   /* 오른쪽: 인스펙터 */
   .name-field { padding: 16px 16px 12px; display: grid; gap: 6px; }
   .name-field .wrap { display: flex; align-items: center; background: var(--bg); border-radius: var(--r-sm); box-shadow: var(--press-sm); }
@@ -176,7 +160,14 @@
   .tabs button { background: transparent; box-shadow: none; padding: 7px 0; color: var(--muted); border-radius: var(--r-sm); }
   .tabs button:hover:not(:disabled) { box-shadow: none; color: var(--text); }
   .tabs button.on, .tabs button.on:hover:not(:disabled) { background: var(--bg); color: var(--text); box-shadow: var(--raise-sm); }
-  .panels { flex: 1; overflow: auto; padding: 18px 16px; }
+  .panels { flex: 1; overflow: auto; padding: 16px; container-type: inline-size; }
+  /* 인스펙터 묶음 = 떠 있는 카드. 폭이 넉넉하면 2열로 흘려 배치 (카드는 열 사이에서 잘리지 않음) */
+  .panels [data-need] { display: contents; }
+  @container (min-width: 440px) { .panels [data-panel] { columns: 2; column-gap: 14px; } }
+  /* 2열인데 칸이 좁을 때: 버튼 글자는 줄바꿈, 즐겨찾는 색 이름은 윗줄로 */
+  @container (min-width: 440px) and (max-width: 520px) { .panels .group button { white-space: normal; word-break: keep-all; } .presets .lbl { flex-basis: 100%; } }
+  .panels .group { break-inside: avoid; padding: 14px; margin: 0 0 14px; border: 0; border-radius: var(--r); box-shadow: var(--raise-sm); }
+  .panels .group:last-child { margin-bottom: 0; box-shadow: var(--raise-sm); }
   /* 묶음 구분은 새긴 홈(어두운 선 + 밝은 선) */
   .group { display: grid; gap: 11px; padding-bottom: 18px; margin-bottom: 18px; border-bottom: 1px solid rgba(0, 0, 0, .4); box-shadow: 0 1px 0 rgba(255, 255, 255, .035); }
   .group:last-child { border-bottom: 0; box-shadow: none; margin-bottom: 0; }
@@ -184,7 +175,7 @@
   .stack { display: grid; gap: 9px; }
   .row { display: flex; gap: 8px; align-items: center; }
   .row > .grow { flex: 1; }
-  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .f { display: grid; grid-template-columns: 1fr auto; gap: 6px 8px; align-items: center; font-size: 12px; color: var(--muted); }
   .f > input, .f > select, .f > textarea, .f > .seg { grid-column: 1 / -1; }
   .f .val { color: var(--text); font: 12px var(--mono); }
@@ -201,7 +192,7 @@
   .seg label:has(input:checked) { background: var(--bg); color: var(--text); box-shadow: var(--raise-sm); }
   .seg label:has(input:focus-visible) { outline: 2px solid var(--accent-line); }
   /* 즐겨찾는 색 (네온 프리셋) */
-  .presets { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+  .presets { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
   .presets .lbl { margin-right: auto; }
   .presets .sw, .presets .sw:hover:not(:disabled) { width: 24px; height: 24px; padding: 0; border-radius: 50%; background: var(--c);
     box-shadow: var(--raise-sm), inset 0 0 0 2px rgba(0, 0, 0, .22); }
@@ -225,15 +216,14 @@
   .toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); background: var(--bg); color: var(--text);
     padding: 10px 18px; border-radius: 999px; box-shadow: var(--raise), inset 0 0 0 1px var(--accent-line); z-index: 30; max-width: calc(100vw - 32px); }
 
-  @media (max-width: 1240px) { .stage-inner { grid-template-columns: 1fr; gap: 28px; }
-    #editor { width: min(100%, 480px); } .device { width: min(100%, 420px); } }
   @media (max-width: 960px) {
     body { display: block; overflow: auto; height: auto; padding: 10px; }
     .top { flex-wrap: wrap; height: auto; padding: 10px 12px; }
     .chip, .save, .vsep { display: none; }
     .top button { padding: 7px 10px; }
     .shell { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
-    .tiles { max-height: 280px; }
+    .stage-inner { container-type: normal; }
+    #editor { width: min(100%, 560px); }
     .stage-inner { padding: 22px 16px; }
     .panels { overflow: visible; }
   }
@@ -261,6 +251,7 @@
       <b><kbd>⌘/Ctrl</kbd> <kbd>S</kbd></b><span>현재 PNG 저장</span>
       <b><kbd>⌘/Ctrl</kbd> <kbd>V</kbd></b><span>클립보드 이미지 붙여넣기</span>
       <b>PageUp · Down</b><span>이전 · 다음 디자인</span>
+      <b>프레임</b><span>끌어서 순서 변경 · 체크 = ZIP·일괄 적용 대상 (<kbd>Shift</kbd>+클릭 = 범위)</span>
       <b>파일 끌어다 놓기</b><span>이미지 1장 = 현재 디자인, 여러 장 = 장당 1개, 폰트 파일 = 폰트 추가</span>
     </div>
   </details>
@@ -272,31 +263,25 @@
 </header>
 
 <main class="shell">
-  <!-- 왼쪽: 디자인 목록 -->
-  <aside class="pane left">
-    <div class="pane-head">
+  <!-- 가운데: 프레임 줄(디자인 목록) + 편집 캔버스 -->
+  <section class="stage">
+    <div class="frames-head">
       <h2>디자인<span id="countBadge" class="badge"></span></h2>
-      <button id="bulkOpen" title="글이나 이미지 여러 개로 한 번에 만들기">일괄 생성</button>
-      <button id="addDesign" class="primary" title="새 디자인">+ 새로</button>
-    </div>
-    <div class="toolbar">
       <button id="dupDesign" class="ghost" title="복제 (⌘/Ctrl+D)">복제</button>
       <button id="moveUp" class="ghost" title="앞으로">←</button>
       <button id="moveDown" class="ghost" title="뒤로">→</button>
       <button id="delDesign" class="ghost danger" title="지금 디자인 삭제">삭제</button>
-      <button id="checkAll" class="ghost" style="margin-left:auto">전체 체크</button>
+      <div id="selBar" class="selbar" hidden>
+        <span id="selCount"></span>
+        <button id="checkNone" class="ghost">해제</button>
+        <button id="delChecked" class="ghost danger">체크한 것 삭제</button>
+      </div>
+      <span class="spacer"></span>
+      <button id="checkAll" class="ghost" title="ZIP 저장·일괄 적용 대상으로 전부 체크">전체 체크</button>
+      <button id="bulkOpen" title="글이나 이미지 여러 개로 한 번에 만들기">일괄 생성</button>
+      <button id="addDesign" class="primary" title="새 디자인">+ 새로</button>
     </div>
-    <div id="list" class="tiles"></div>
-    <div id="selBar" class="selbar" hidden>
-      <span id="selCount"></span>
-      <button id="checkNone" class="ghost">해제</button>
-      <button id="delChecked" class="ghost danger">체크한 것 삭제</button>
-    </div>
-    <p class="hint note">체크 = ZIP 저장·일괄 적용 대상. 끌어서 순서를 바꾸고, Shift+클릭으로 범위를 체크합니다.</p>
-  </aside>
-
-  <!-- 가운데: 편집 캔버스 + 장비 미리보기 -->
-  <section class="stage">
+    <div id="list" class="frames" title="클릭 = 선택 · 끌기 = 순서 변경 · 체크 = ZIP 저장·일괄 적용 대상 (Shift+클릭 = 범위)"></div>
     <div class="stage-inner">
       <figure class="view">
         <div class="stage-bar">
@@ -313,14 +298,6 @@
         </div>
         <canvas id="editor" width="1200" height="1200"></canvas>
         <p class="hint">드래그 = 이동 · 휠 = 크기 · 더블클릭 = 글자 편집 · 실제 출력 300 × 300 px</p>
-      </figure>
-      <figure class="view">
-        <figcaption>Loupedeck CT 미리보기</figcaption>
-        <div id="device" class="device"></div>
-        <div class="pager">
-          <button id="pgPrev" class="ghost">◀</button><span id="pgLabel">1 / 1</span><button id="pgNext" class="ghost">▶</button>
-        </div>
-        <p class="hint">터치 버튼 12칸 = 목록 순서 · 다이얼 = 선택한 디자인</p>
       </figure>
     </div>
   </section>
@@ -360,6 +337,14 @@
             </div>
             <input id="fontFile" type="file" accept=".ttf,.otf,.woff,.woff2" multiple hidden>
             <div id="fontMsg" class="msg"></div>
+          </div>
+          <div class="group">
+            <h3>위치</h3>
+            <div class="grid2">
+              <label class="f">X<input type="number" data-scope="text" data-k="x"></label>
+              <label class="f">Y<input type="number" data-scope="text" data-k="y"></label>
+            </div>
+            <button id="centerText" class="wide">가운데로 이동</button>
           </div>
           <div class="group">
             <h3>서식</h3>
@@ -427,14 +412,6 @@
             <div class="prop"><span class="k">글로우 색</span>
               <span class="color"><input type="color" data-scope="text" data-k="glow.color"><input type="text" data-hex maxlength="7" data-scope="text" data-k="glow.color" aria-label="글로우 색 HEX"></span></div>
           </div>
-          <div class="group">
-            <h3>위치</h3>
-            <div class="grid2">
-              <label class="f">X<input type="number" data-scope="text" data-k="x"></label>
-              <label class="f">Y<input type="number" data-scope="text" data-k="y"></label>
-            </div>
-            <button id="centerText" class="wide">가운데로 이동</button>
-          </div>
         </div>
       </div>
 
@@ -489,7 +466,7 @@
       <!-- 일괄 적용 -->
       <div data-panel="batch" hidden>
         <div class="group">
-          <h3>스타일 일괄 적용</h3>
+          <h3>적용할 항목</h3>
           <div class="stack">
             <label class="check"><input type="checkbox" data-ap="font" checked> 폰트 (패밀리·굵기·기울임·자간·줄 간격)</label>
             <label class="check"><input type="checkbox" data-ap="size" checked> 폰트 크기</label>
@@ -498,6 +475,9 @@
             <label class="check"><input type="checkbox" data-ap="bg" checked> 배경</label>
             <label class="check"><input type="checkbox" data-ap="fit"> 칸을 넘치는 글자는 자동으로 줄이기</label>
           </div>
+        </div>
+        <div class="group">
+          <h3>대상 · 실행</h3>
           <label class="f">적용 대상
             <select id="applyTarget">
               <option value="checked">왼쪽에서 체크한 디자인</option>
@@ -546,7 +526,6 @@
 <script>
 'use strict';
 const SIZE = 300;            // 출력 해상도 (고정)
-const SLOTS = 12;            // CT 터치 디스플레이 버튼 수 (4×3)
 const FIT_PAD = 12;          // 자동 맞춤 때 남기는 여백
 const GENERIC = ['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy', 'system-ui'];
 const $ = (s) => document.querySelector(s);
@@ -557,7 +536,7 @@ const round2 = (v) => Math.round(v * 100) / 100;
 
 // ───────── 상태 ─────────
 let uid = 1;
-const S = { designs: [], cur: 0, page: 0, guide: false };
+const S = { designs: [], cur: 0, guide: false };
 const IMG = new Map();       // 이미지 id(src) → { el, blob }. 실행 취소·자동 저장이 이미지를 id로 참조
 const cur = () => S.designs[S.cur];
 const selText = () => { const d = cur(); return d.texts.find((t) => t.id === d.sel) || null; };
@@ -655,14 +634,14 @@ function travel(dir) {
   H.i = j;
   const e = H.stack[j], prev = new Map(S.designs.map((d) => [d.id, d]));
   S.designs = JSON.parse(e.json).map((d) => revive(d, prev.get(d.id)));
-  S.cur = clamp(e.cur, 0, S.designs.length - 1); S.page = Math.floor(S.cur / SLOTS);
+  S.cur = clamp(e.cur, 0, S.designs.length - 1);
   e.json = JSON.stringify(S.designs, strip);   // 되살린 상태를 이 단계의 기준으로 (다음 비교에서 '변경 없음'으로 보이도록)
   save(e.json); syncHistory(); refreshAll();
 }
 $('#undo').addEventListener('click', () => travel(-1));
 $('#redo').addEventListener('click', () => travel(1));
 
-// ───────── 렌더링 (편집기·썸네일·미리보기·내보내기 공용) ─────────
+// ───────── 렌더링 (편집기·썸네일·내보내기 공용) ─────────
 const localFaces = new Map();   // 패밀리 → [{ style, ps, full }] (queryLocalFonts 결과)
 const faceAlias = new Map();    // "패밀리|스타일" → 등록한 FontFace 이름
 function fontStr(t) {
@@ -786,44 +765,11 @@ function render(d, ctx, guides = false) {
   }
 }
 
-// ───────── DOM: 편집기, 목록, 장비 목업 ─────────
+// ───────── DOM: 편집기, 목록 ─────────
 const editor = $('#editor');
 const ectx = editor.getContext('2d');
 const list = $('#list');
 const thumbs = new Map();   // design id → 목록 썸네일 canvas
-let slotCanvases = [];      // 장비 터치 버튼 canvas 12개
-let dialCanvas;
-
-function buildDevice() {
-  const dev = $('#device');
-  // 160×150 장비 좌표 → %
-  const put = (cls, x, y, w, h) => {
-    const el = document.createElement('div'); el.className = cls;
-    el.style.cssText = `left:${x / 1.6}%;top:${y / 1.5}%;width:${w / 1.6}%;height:${h / 1.5}%`;
-    dev.appendChild(el); return el;
-  };
-  [15, 35, 55].forEach((cy) => { put('knob', 11.5, cy - 7.5, 15, 15); put('knob', 133.5, cy - 7.5, 15, 15); });
-  put('bezel', 34, 7, 92, 56);
-  put('strip', 36.5, 10, 7.5, 50); put('strip', 116, 10, 7.5, 50);
-  slotCanvases = [];
-  for (let i = 0; i < SLOTS; i++) {
-    const c = i % 4, r = Math.floor(i / 4);
-    const s = put('slot', 46.25 + c * 17.5, 10 + r * 17.5, 15, 15);
-    const cv = document.createElement('canvas'); cv.width = cv.height = 120;
-    s.appendChild(cv); s.dataset.i = i;
-    s.addEventListener('click', () => { const idx = S.page * SLOTS + i; if (S.designs[idx]) select(idx); });
-    slotCanvases.push(cv);
-  }
-  for (let i = 0; i < 8; i++) put('rbtn', 26 + i * (108 / 7) - 4.5, 67.5, 9, 9);
-  for (let r = 0; r < 3; r++) for (let c = 0; c < 2; c++) {
-    put('sbtn', 14 + c * 14, 94 + r * 14, 11, 11);
-    put('sbtn', 121 + c * 14, 94 + r * 14, 11, 11);
-  }
-  put('dial', 51, 84, 58, 58);
-  const ds = put('dial-screen', 65, 98, 30, 30);
-  dialCanvas = document.createElement('canvas'); dialCanvas.width = dialCanvas.height = 240;
-  ds.appendChild(dialCanvas);
-}
 
 let dragFrom = null;    // 끌고 있는 타일 번호 (순서 변경)
 let lastCheck = null;   // 마지막으로 체크한 타일 번호 (Shift 범위 체크)
@@ -847,7 +793,8 @@ function rebuildList() {
     const no = document.createElement('b'); no.textContent = i + 1;
     const tx = document.createElement('span'); tx.textContent = d.name; tx.title = d.name;
     nm.append(no, tx);
-    row.append(cv, cb, nm);
+    const th = document.createElement('div'); th.className = 'thumb'; th.append(cv, cb);
+    row.append(nm, th);   // 피그마 프레임처럼 이름표가 위
     row.addEventListener('click', () => select(i));
     row.addEventListener('dragstart', (e) => { dragFrom = i; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', d.name); });
     row.addEventListener('dragend', () => { dragFrom = null; });
@@ -866,6 +813,11 @@ function rebuildList() {
   });
   syncChecks();
 }
+// 프레임 줄은 세로 휠로도 가로 스크롤
+list.addEventListener('wheel', (e) => {
+  if (Math.abs(e.deltaY) <= Math.abs(e.deltaX) || list.scrollWidth <= list.clientWidth) return;
+  e.preventDefault(); list.scrollLeft += e.deltaY;
+}, { passive: false });
 // 체크 상태 → 체크박스·버튼·선택 바
 function syncChecks() {
   const boxes = list.querySelectorAll('input');
@@ -885,19 +837,6 @@ function showTab(name) {
 }
 for (const b of $$('[data-tab]')) b.addEventListener('click', () => showTab(b.dataset.tab));
 
-function drawDevice() {
-  const pages = Math.max(1, Math.ceil(S.designs.length / SLOTS));
-  S.page = Math.min(S.page, pages - 1);
-  $('#pgLabel').textContent = `${S.page + 1} / ${pages}`;
-  slotCanvases.forEach((cv, i) => {
-    const idx = S.page * SLOTS + i, d = S.designs[idx];
-    cv.parentElement.classList.toggle('on', idx === S.cur);
-    const c = cv.getContext('2d');
-    if (d) render(d, c); else { c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, cv.width, cv.height); }
-  });
-  render(cur(), dialCanvas.getContext('2d'));
-}
-
 // 다시 그리기. full = 목록 구조가 바뀜(추가·삭제·순서) → 목록과 모든 썸네일을 다시 만듦
 let raf = 0, needFull = false;
 function changed(full = false) {
@@ -910,7 +849,6 @@ function changed(full = false) {
     const d = cur();
     render(d, ectx, true);
     const th = thumbs.get(d.id); if (th) render(d, th.getContext('2d'));
-    drawDevice();
   });
 }
 const refreshAll = () => { syncPanel(); changed(true); };
@@ -918,10 +856,9 @@ const refreshAll = () => { syncPanel(); changed(true); };
 // rebuilt = 목록 구조가 바뀐 뒤의 선택 (목록을 다시 만듦). 단순 선택은 강조 표시만 옮김
 function select(i, rebuilt = false) {
   S.cur = clamp(i, 0, S.designs.length - 1);
-  S.page = Math.floor(S.cur / SLOTS);
   if (rebuilt) return refreshAll();
   [...list.children].forEach((el, j) => el.classList.toggle('on', j === S.cur));
-  list.children[S.cur]?.scrollIntoView({ block: 'nearest' });
+  list.children[S.cur]?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   syncPanel(); changed();
 }
 
@@ -1350,8 +1287,6 @@ $('#moveUp').addEventListener('click', () => move(-1));
 $('#moveDown').addEventListener('click', () => move(1));
 $('#checkAll').addEventListener('click', () => { S.designs.forEach((d) => (d.checked = true)); syncChecks(); });
 $('#checkNone').addEventListener('click', () => { S.designs.forEach((d) => (d.checked = false)); syncChecks(); });
-$('#pgPrev').addEventListener('click', () => { S.page = Math.max(0, S.page - 1); changed(); });
-$('#pgNext').addEventListener('click', () => { S.page = Math.min(Math.ceil(S.designs.length / SLOTS) - 1, S.page + 1); changed(); });
 $('#resetAll').addEventListener('click', () => {
   S.designs = []; S.designs.push(newDesign()); select(0, true);
   toast('모든 디자인을 지웠습니다. ⌘/Ctrl+Z로 되돌릴 수 있습니다.');
@@ -1567,14 +1502,13 @@ async function restore() {
   return { raw, cur: st.cur };
 }
 async function boot() {
-  buildDevice();
   let saved = null;
   try { saved = await Promise.race([restore(), new Promise((ok) => setTimeout(ok, 3000, null))]); }
   catch { setSave('off'); }
   if (saved && saved.raw.length) {
     uid = 1 + Math.max(0, ...saved.raw.flatMap((d) => [+d.id || 0, ...(d.texts || []).map((t) => +String(t.id).slice(1) || 0)]));
     S.designs = saved.raw.map((d) => revive(d));
-    S.cur = clamp(saved.cur || 0, 0, S.designs.length - 1); S.page = Math.floor(S.cur / SLOTS);
+    S.cur = clamp(saved.cur || 0, 0, S.designs.length - 1);
   } else S.designs.push(newDesign());
   renderFontList();
   refreshAll(); commit();
