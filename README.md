@@ -2,7 +2,9 @@
 
 [![LOUPEDECK ICON STUDIO 화면](docs/screenshot.png)](https://capstoneid.github.io/Nerd_deck_design/)
 
-**바로 쓰기: https://capstoneid.github.io/Nerd_deck_design/**
+<p align="center">
+  <a href="https://capstoneid.github.io/Nerd_deck_design/"><img src="https://img.shields.io/badge/%EB%B0%94%EB%A1%9C%20%EC%93%B0%EA%B8%B0-LOUPEDECK%20ICON%20STUDIO-CCFF00?style=for-the-badge&logo=googlechrome&logoColor=white&labelColor=111111" alt="바로 쓰기 LOUPEDECK ICON STUDIO"></a>
+</p>
 
 <p align="center">
   <a href="https://www.youtube.com/@%EC%8B%A4%EB%AC%B4%EC%9E%90"><img src="https://img.shields.io/badge/YouTube-%EC%8B%A4%EB%AC%B4%EC%9E%90-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="YouTube 실무자"></a>
