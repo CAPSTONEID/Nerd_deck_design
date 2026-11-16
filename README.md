@@ -1,5 +1,9 @@
 # LOUPEDECK ICON STUDIO
 
+[![LOUPEDECK ICON STUDIO 화면](docs/screenshot.png)](https://capstoneid.github.io/Nerd_deck_design/)
+
+**바로 쓰기: https://capstoneid.github.io/Nerd_deck_design/**
+
 Loupedeck CT 버튼·다이얼 화면에 넣을 300×300 PNG 이미지를 만드는 웹 도구입니다.
 
 `index.html`을 Chrome, Edge, Aside 같은 Chromium 계열 브라우저로 열면 바로 쓸 수 있습니다. 설치는 필요 없습니다.
