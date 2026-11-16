@@ -14,8 +14,6 @@
   <a href="mailto:project@capstone.id"><img src="https://img.shields.io/badge/Mail-project@capstone.id-222222?style=for-the-badge&logo=maildotru&logoColor=white" alt="Mail project@capstone.id"></a>
 </p>
 
-Loupedeck CT 버튼·다이얼 화면에 넣을 300×300 PNG 이미지를 만드는 웹 도구입니다.
-
 ## 기능
 
 ### 디자인
