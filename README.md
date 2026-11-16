@@ -4,6 +4,14 @@
 
 **바로 쓰기: https://capstoneid.github.io/Nerd_deck_design/**
 
+<p align="center">
+  <a href="https://www.youtube.com/@%EC%8B%A4%EB%AC%B4%EC%9E%90"><img src="https://img.shields.io/badge/YouTube-%EC%8B%A4%EB%AC%B4%EC%9E%90-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="YouTube 실무자"></a>
+  <a href="https://www.instagram.com/id.capstone"><img src="https://img.shields.io/badge/Instagram-id.capstone-E4405F?style=for-the-badge&logo=instagram&logoColor=white" alt="Instagram id.capstone"></a>
+  <a href="https://www.threads.com/@id.capstone"><img src="https://img.shields.io/badge/Threads-@id.capstone-000000?style=for-the-badge&logo=threads&logoColor=white" alt="Threads @id.capstone"></a>
+  <a href="https://www.capstone.id"><img src="https://img.shields.io/badge/Homepage-capstone.id-FFC72C?style=for-the-badge&logo=googlechrome&logoColor=black" alt="Homepage capstone.id"></a>
+  <a href="mailto:project@capstone.id"><img src="https://img.shields.io/badge/Mail-project@capstone.id-222222?style=for-the-badge&logo=maildotru&logoColor=white" alt="Mail project@capstone.id"></a>
+</p>
+
 Loupedeck CT 버튼·다이얼 화면에 넣을 300×300 PNG 이미지를 만드는 웹 도구입니다.
 
 `index.html`을 Chrome, Edge, Aside 같은 Chromium 계열 브라우저로 열면 바로 쓸 수 있습니다. 설치는 필요 없습니다.
