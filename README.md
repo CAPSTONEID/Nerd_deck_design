@@ -3,11 +3,6 @@
 [![LOUPEDECK ICON STUDIO 화면](docs/screenshot.png)](https://capstoneid.github.io/Nerd_deck_design/)
 
 <p align="center">
-  Loupedeck CT의 버튼·다이얼 화면에 들어갈 300×300 아이콘을 브라우저에서 바로 만드는 웹 도구입니다.<br>
-  글자·이미지·배경을 꾸미고, 여러 장을 한 번에 만들어 PNG·ZIP으로 내려받을 수 있습니다.
-</p>
-
-<p align="center">
   <a href="https://capstoneid.github.io/Nerd_deck_design/"><img src="https://img.shields.io/badge/%EB%B0%94%EB%A1%9C%20%EC%93%B0%EA%B8%B0-LOUPEDECK%20ICON%20STUDIO-CCFF00?style=for-the-badge&logo=googlechrome&logoColor=white&labelColor=111111" alt="바로 쓰기 LOUPEDECK ICON STUDIO"></a>
 </p>
 
@@ -17,6 +12,13 @@
   <a href="https://www.threads.com/@id.capstone"><img src="https://img.shields.io/badge/Threads-@id.capstone-000000?style=for-the-badge&logo=threads&logoColor=white" alt="Threads @id.capstone"></a>
   <a href="https://www.capstone.id"><img src="https://img.shields.io/badge/Homepage-capstone.id-FFC72C?style=for-the-badge&logo=googlechrome&logoColor=black" alt="Homepage capstone.id"></a>
   <a href="mailto:project@capstone.id"><img src="https://img.shields.io/badge/Mail-project@capstone.id-222222?style=for-the-badge&logo=maildotru&logoColor=white" alt="Mail project@capstone.id"></a>
+</p>
+
+---
+
+<p align="center">
+  Loupedeck CT의 버튼·다이얼 화면에 들어갈 300×300 아이콘을 브라우저에서 바로 만드는 웹 도구입니다.<br>
+  글자·이미지·배경을 꾸미고, 여러 장을 한 번에 만들어 PNG·ZIP으로 내려받을 수 있습니다.
 </p>
 
 ## 기능
